@@ -31,7 +31,7 @@ export async function daemonCommand(action, options) {
       return startDaemon(options);
     default:
       console.error(chalk.red(`Unknown daemon action: ${action}`));
-      console.log('Usage: mc daemon <start|stop|status|restart>');
+      console.log('Usage: mclaw daemon <start|stop|status|restart>');
       process.exit(1);
   }
 }
@@ -267,7 +267,7 @@ async function daemonStatus(options) {
   } else if (pids.length > 0) {
     console.log(chalk.yellow(`Daemon: process on port ${targetPort} but not responding`));
     console.log(chalk.dim(`  PIDs: ${pids.join(', ')}`));
-    console.log(chalk.dim(`  Try: mc daemon stop`));
+    console.log(chalk.dim(`  Try: mclaw daemon stop`));
   } else {
     console.log(chalk.yellow('Daemon: not running'));
     if (pid) {

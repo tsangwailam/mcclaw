@@ -39,7 +39,7 @@ async function startDashboard(options) {
   
   // 1. Ensure API is running
   if (!(await isDaemonHealthy(apiPort))) {
-    console.error(chalk.red('API Daemon not running. Start it with: mc daemon start'));
+    console.error(chalk.red('API Daemon not running. Start it with: mclaw daemon start'));
     process.exit(1);
   }
 

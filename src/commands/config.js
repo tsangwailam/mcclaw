@@ -11,7 +11,7 @@ export async function configCommand(action, key, options) {
       return showConfig();
     default:
       console.error(chalk.red(`Unknown config action: ${action}`));
-      console.log('Usage: mc config <set|get|show>');
+      console.log('Usage: mclaw config <set|get|show>');
       console.log('  mc config set --db-url "postgresql://..."');
       console.log('  mc config get db-url');
       console.log('  mc config show');

@@ -16,7 +16,7 @@ export async function statusCommand(options) {
   const { port } = getDaemonInfo();
   
   if (!(await isDaemonHealthy(port))) {
-    console.error(chalk.red('Daemon not running. Start it with: mc daemon start'));
+    console.error(chalk.red('Daemon not running. Start it with: mclaw daemon start'));
     console.error(chalk.dim('Or use --db-url for direct database access'));
     process.exit(1);
   }
