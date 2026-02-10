@@ -5,9 +5,7 @@ Quick setup for agents to install and configure Mission Claw.
 ## 1. Install CLI
 
 ```bash
-cd /home/tsangwailam/sambashare/mission-control-cli
-npm install
-npm link
+npm install -g mission-control
 ```
 
 Verify: `mclaw --help`
@@ -38,11 +36,9 @@ Check status: `mclaw daemon status`
 To enable the mission-claw skill for all agents:
 
 ```bash
-# Create skill directory
-mkdir -p ~/.openclaw/skills/mission-claw
-
-# Copy skill file
-cp /home/tsangwailam/sambashare/mission-control-cli/skill/SKILL.md ~/.openclaw/skills/mission-claw/
+# The skill is included in the package. Add its location to OpenClaw's extraDirs:
+# You can find the global path with: npm root -g
+# e.g. path: $(npm root -g)/mission-control/skill
 ```
 
 Then add to OpenClaw config (`~/.openclaw/openclaw.json`):
@@ -50,7 +46,7 @@ Then add to OpenClaw config (`~/.openclaw/openclaw.json`):
 {
   "skills": {
     "load": {
-      "extraDirs": ["~/.openclaw/skills"]
+      "extraDirs": ["/path/to/global/node_modules/mission-control/skill"]
     },
     "entries": {
       "mission-claw": { "enabled": true }
@@ -68,6 +64,24 @@ mclaw log "Test activity" --agent "test" --total-tokens 100
 # Check it worked
 mclaw list --limit 1
 ```
+
+## Agent Usage
+
+Agents should log all significant tasks upon completion.
+
+**Standard Logging Command:**
+```bash
+mclaw log "Description of work" \
+  --agent "YourName" \
+  --project "ProjectName" \
+  --status completed \
+  --total-tokens N \
+  --duration "Xm Ys"
+```
+
+**Guidelines:**
+- **Tokens**: Always include `--total-tokens` for cost tracking.
+- **Automation**: If using OpenClaw, enabling the `mission-claw` skill (see Step 4) will provide the agent with these instructions automatically.
 
 ## Quick Commands
 
