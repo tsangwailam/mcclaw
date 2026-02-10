@@ -134,7 +134,7 @@ async function stopDashboard() {
 
 async function dashboardStatus() {
   const { pid, port } = getDashboardInfo();
-  const healthy = dashPidIsHealthy(port);
+  const healthy = await dashPidIsHealthy(port);
 
   if (healthy) {
     console.log(chalk.green('Dashboard: running'));
