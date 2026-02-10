@@ -2,6 +2,17 @@
 
 Mission Claw is a powerful activity logging CLI with a built-in background daemon and web dashboard. It helps you track agent tasks, tokens, and progress in real-time.
 
+![mclaw](https://github.com/user-attachments/assets/0d5a419d-5148-43cf-93f4-f4d78d4f03dc)
+
+# Express Install from OpenClaw
+
+Paste the following instruction into openclaw chat
+
+```
+Follow instruction here to install Mission Claw. 
+https://github.com/tsangwailam/mcclaw/blob/main/INSTALL.md
+```
+
 ## Installation
 
 ```bash
