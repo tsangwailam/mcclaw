@@ -5,6 +5,7 @@ import { toCamelCase } from '../lib/utils.js';
 const PORT = process.env.PORT || 3001;
 
 async function handleGetActivity(req, res, url) {
+  try {
   const prisma = await getApiPrisma();
   const searchParams = url.searchParams;
   const agent = searchParams.get('agent');
@@ -67,9 +68,14 @@ async function handleGetActivity(req, res, url) {
       statuses: statuses.map(s => s.status).filter(Boolean),
     }
   }));
+  } catch (err) {
+    res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({ error: err.message }));
+  }
 }
 
 async function handleGetStats(req, res) {
+  try {
   const prisma = await getApiPrisma();
   
   const total = await prisma.activity.count();
@@ -113,6 +119,10 @@ async function handleGetStats(req, res) {
     byAgent: byAgent.filter(a => a.agent).map(a => ({ agent: a.agent, count: a._count })),
     byProject: byProject.filter(p => p.project).map(p => ({ project: p.project, count: p._count })),
   }));
+  } catch (err) {
+    res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({ error: err.message }));
+  }
 }
 
 async function handlePostActivity(req, res) {
@@ -121,9 +131,23 @@ async function handlePostActivity(req, res) {
   req.on('end', async () => {
     try {
       const data = JSON.parse(body);
+      
+      if (!data.action || typeof data.action !== 'string' || data.action.trim().length === 0) {
+        res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ error: 'Missing or invalid "action" field' }));
+        return;
+      }
+      
+      const validStatuses = ['completed', 'in_progress', 'failed'];
+      if (data.status && !validStatuses.includes(data.status)) {
+        res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` }));
+        return;
+      }
+      
       const prisma = await getApiPrisma();
       
-      const action = data.action;
+      const action = data.action.trim();
       const agent = data.agent || null;
       const project = toCamelCase(data.project) || null;
       const status = data.status;
