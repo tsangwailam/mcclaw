@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import Table from 'cli-table3';
 import { getDaemonInfo, isDaemonHealthy, getApiUrl, getDbProvider } from '../lib/config.js';
-import { getPrisma } from '../lib/db.js';
+import { createPrismaClient } from '../lib/db.js';
 
 function formatNumber(n) {
   return n?.toLocaleString() ?? '—';
@@ -51,7 +51,7 @@ export async function listCommand(options) {
 
 async function listDirect(options) {
   try {
-    const prisma = await getPrisma(options.dbUrl);
+    const prisma = await createPrismaClient(options.dbUrl);
     const provider = getDbProvider(options.dbUrl);
     
     const where = {};

@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { getDaemonInfo, isDaemonHealthy, getApiUrl, getDbProvider } from '../lib/config.js';
-import { getPrisma } from '../lib/db.js';
+import { createPrismaClient } from '../lib/db.js';
 import { toCamelCase } from '../lib/utils.js';
 
 function formatNumber(n) {
@@ -54,7 +54,7 @@ export async function logCommand(action, options) {
 
 async function logDirect(action, options) {
   try {
-    const prisma = await getPrisma(options.dbUrl);
+    const prisma = await createPrismaClient(options.dbUrl);
     
     const agent = options.agent || null;
     const project = toCamelCase(options.project) || null;

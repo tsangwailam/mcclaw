@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { getDaemonInfo, isDaemonHealthy, getApiUrl, getDbProvider } from '../lib/config.js';
-import { getPrisma } from '../lib/db.js';
+import { createPrismaClient } from '../lib/db.js';
 
 function getActivityTime(act) {
   return act.createdAt || act.timestamp;
@@ -39,7 +39,7 @@ export async function statusCommand(options) {
 
 async function statusDirect(options) {
   try {
-    const prisma = await getPrisma(options.dbUrl);
+    const prisma = await createPrismaClient(options.dbUrl);
     const provider = getDbProvider(options.dbUrl);
     const dateField = provider === 'postgresql' ? 'timestamp' : 'createdAt';
 
