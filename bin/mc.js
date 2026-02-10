@@ -55,6 +55,14 @@ program
   .option('--db-url <url>', 'Database URL (postgresql:// or file:)')
   .action(statusCommand);
 
+// mc restart
+program
+  .command('restart')
+  .description('Restart the daemon')
+  .option('--port <port>', 'Port for daemon', '3100')
+  .option('--db-url <url>', 'Database URL (postgresql:// or file:)')
+  .action((options) => daemonCommand('restart', options));
+
 // mc dashboard [start|stop|status]
 program
   .command('dashboard [action]')

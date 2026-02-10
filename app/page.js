@@ -6,6 +6,14 @@ function formatNumber(n) {
   return n?.toLocaleString() ?? '—';
 }
 
+function formatDateForInput(date) {
+  if (!date) return '';
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return date;
+  const pad = (n) => n.toString().padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 const styles = {
   container: {
     maxWidth: '1200px',
@@ -140,10 +148,10 @@ export default function Dashboard() {
   const [filterOptions, setFilterOptions] = useState({ agents: [], projects: [], statuses: [] });
   
   // Default to last 24 hours
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const defaultStart = yesterday.toISOString().split('T')[0];
-  const defaultEnd = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const defaultStart = yesterday.toISOString();
+  const defaultEnd = now.toISOString();
 
   const [filters, setFilters] = useState({
     agent: 'all',
@@ -205,7 +213,18 @@ export default function Dashboard() {
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+    let newValue = value;
+    if ((name === 'start' || name === 'end') && value) {
+      try {
+        const d = new Date(value);
+        if (!isNaN(d.getTime())) {
+          newValue = d.toISOString();
+        }
+      } catch (e) {
+        newValue = value;
+      }
+    }
+    setFilters(prev => ({ ...prev, [name]: newValue }));
     // Clear quick filter selection when dates are manually changed
     if (name === 'start' || name === 'end') {
       setActiveQuickFilter(null);
@@ -280,9 +299,9 @@ export default function Dashboard() {
         <div style={styles.filterGroup}>
           <label style={styles.label}>From</label>
           <input 
-            type="date" 
+            type="datetime-local" 
             name="start" 
-            value={filters.start} 
+            value={formatDateForInput(filters.start)} 
             onChange={handleFilterChange} 
             style={styles.input}
           />
@@ -291,9 +310,9 @@ export default function Dashboard() {
         <div style={styles.filterGroup}>
           <label style={styles.label}>To</label>
           <input 
-            type="date" 
+            type="datetime-local" 
             name="end" 
-            value={filters.end} 
+            value={formatDateForInput(filters.end)} 
             onChange={handleFilterChange} 
             style={styles.input}
           />
