@@ -1,0 +1,63 @@
+{
+  "name": "mission-control",
+  "version": "0.1.0",
+  "description": "CLI tool for logging agent activities with embedded dashboard",
+  "type": "module",
+  "bin": {
+    "mcclaw": "./bin/mc.js",
+    "mission-control": "./bin/mc.js"
+  },
+  "main": "src/index.js",
+  "files": [
+    "app",
+    "bin",
+    "src",
+    "prisma/schema.prisma",
+    "prisma/schema.postgresql.prisma",
+    "prisma/migrations",
+    "public",
+    "README.md",
+    "next.config.js",
+    ".next"
+  ],
+  "scripts": {
+    "dev": "node bin/mc.js",
+    "build": "npm run prisma:generate",
+    "prepublishOnly": "npm run dashboard:build && rm -rf .next/cache && npm run prisma:generate",
+    "postinstall": "npm run prisma:generate",
+    "prisma:generate": "prisma generate --schema=prisma/schema.prisma && prisma generate --schema=prisma/schema.postgresql.prisma",
+    "prisma:migrate:sqlite": "prisma migrate dev --schema=prisma/schema.prisma",
+    "prisma:migrate:pg": "prisma migrate dev --schema=prisma/schema.postgresql.prisma",
+    "dashboard": "next dev -p 3001",
+    "dashboard:build": "next build",
+    "dashboard:start": "next start -p 3001"
+  },
+  "keywords": [
+    "cli",
+    "activity",
+    "logging",
+    "dashboard"
+  ],
+  "author": "William Tsang",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tsangwailam/mcclaw.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tsangwailam/mcclaw/issues"
+  },
+  "homepage": "https://github.com/tsangwailam/mcclaw#readme",
+  "dependencies": {
+    "@prisma/client": "^6.3.1",
+    "chalk": "^5.3.0",
+    "cli-table3": "^0.6.5",
+    "commander": "^12.1.0",
+    "next": "^14.2.21",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "prisma": "^6.3.1"
+  }
+}

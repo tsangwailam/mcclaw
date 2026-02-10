@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client-sqlite"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Activity {
+  id           Int      @id @default(autoincrement())
+  action       String
+  details      String?
+  status       String   @default("completed")
+  agent        String?
+  project      String?
+  duration     String?
+  inputTokens  Int?
+  outputTokens Int?
+  totalTokens  Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
