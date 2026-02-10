@@ -117,16 +117,31 @@ async function stopDashboard() {
 
   console.log(chalk.cyan(`Stopping dashboard on port ${port}...`));
   
-  // Try to find all related processes (Next.js spawns children)
+  // SIGTERM first (graceful shutdown)
+  try {
+    process.kill(pid, 'SIGTERM');
+  } catch {}
+  
   try {
     const pids = execSync(`lsof -ti:${port} 2>/dev/null`, { encoding: 'utf-8' }).trim().split('\n');
     for (const p of pids) {
-      if (p) process.kill(parseInt(p), 'SIGKILL');
+      if (p) try { process.kill(parseInt(p), 'SIGTERM'); } catch {}
     }
   } catch {}
 
+  await new Promise(r => setTimeout(r, 2000));
+
+  // SIGKILL any survivors
   try {
+    process.kill(pid, 0);
     process.kill(pid, 'SIGKILL');
+  } catch {}
+  
+  try {
+    const pids = execSync(`lsof -ti:${port} 2>/dev/null`, { encoding: 'utf-8' }).trim().split('\n');
+    for (const p of pids) {
+      if (p) try { process.kill(parseInt(p), 'SIGKILL'); } catch {}
+    }
   } catch {}
   
   clearDashboardInfo();
