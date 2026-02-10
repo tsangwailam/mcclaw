@@ -1,6 +1,6 @@
-# Mission Control CLI
+# Mission Claw CLI
 
-Mission Control is a powerful activity logging CLI with a built-in background daemon and web dashboard. It helps you track agent tasks, tokens, and progress in real-time.
+Mission Claw is a powerful activity logging CLI with a built-in background daemon and web dashboard. It helps you track agent tasks, tokens, and progress in real-time.
 
 ## Installation
 

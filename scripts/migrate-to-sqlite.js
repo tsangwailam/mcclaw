@@ -4,7 +4,7 @@ const PG_URL = 'postgresql://postgres:123456@localhost:5432/mission_control';
 const SQLITE_URL = 'file:/home/tsangwailam/.mc/data/mission-control.db';
 
 async function migrate() {
-  console.log('--- Mission Control Migration ---');
+  console.log('--- Mission Claw Migration ---');
   
   const pgPrisma = await getPrisma(PG_URL);
   const sqlitePrisma = await getPrisma(SQLITE_URL);

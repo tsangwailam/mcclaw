@@ -243,7 +243,7 @@ export default function Dashboard() {
     <div style={styles.container}>
       <header style={styles.header}>
         <h1 style={styles.title}>
-          🚀 Mission Control
+          🚀 Mission Claw
         </h1>
         <span style={{ color: '#8b949e', fontSize: '14px' }}>
           Auto-refreshes every 10s

@@ -98,7 +98,7 @@ async function statusDirect(options) {
 }
 
 function printStats(stats) {
-  console.log(chalk.bold.cyan('\n📊 Mission Control Status\n'));
+  console.log(chalk.bold.cyan('\n📊 Mission Claw Status\n'));
   
   console.log(chalk.bold('Activity Counts:'));
   console.log(`  Total:      ${chalk.green(stats.total)}`);

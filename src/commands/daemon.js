@@ -117,7 +117,7 @@ async function startDaemon(options) {
   // Kill any stale processes
   await killDaemonProcesses(port);
 
-  console.log(chalk.cyan(`Starting Mission Control daemon on port ${port}...`));
+  console.log(chalk.cyan(`Starting Mission Claw daemon on port ${port}...`));
   console.log(chalk.dim(`  Database: ${dbUrl.substring(0, 50)}${dbUrl.length > 50 ? '...' : ''}`));
 
   const child = spawn('node', ['src/server/index.js'], {

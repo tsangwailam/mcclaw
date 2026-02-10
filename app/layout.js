@@ -5,7 +5,7 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: 'Mission Control',
+  title: 'Mission Claw',
   description: 'Activity Dashboard',
 };
 

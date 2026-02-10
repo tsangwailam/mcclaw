@@ -52,7 +52,7 @@ function showConfig() {
   const effectiveUrl = getDbUrl();
   const provider = getDbProvider(effectiveUrl);
   
-  console.log(chalk.bold.cyan('\n⚙️  Mission Control Configuration\n'));
+  console.log(chalk.bold.cyan('\n⚙️  Mission Claw Configuration\n'));
   
   console.log(chalk.bold('Database:'));
   console.log(`  Provider:  ${chalk.green(provider)}`);
