@@ -4,8 +4,7 @@
   "description": "CLI tool for logging agent activities with embedded dashboard",
   "type": "module",
   "bin": {
-    "mcclaw": "./bin/mc.js",
-    "mission-control": "./bin/mc.js"
+    "mclaw": "./bin/mclaw.js"
   },
   "main": "src/index.js",
   "files": [
@@ -21,7 +20,7 @@
     ".next"
   ],
   "scripts": {
-    "dev": "node bin/mc.js",
+    "dev": "node bin/mclaw.js",
     "build": "npm run prisma:generate",
     "prepublishOnly": "npm run dashboard:build && rm -rf .next/cache && npm run prisma:generate",
     "postinstall": "npm run prisma:generate",

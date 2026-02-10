@@ -9,8 +9,8 @@ import { daemonCommand } from '../src/commands/daemon.js';
 import { configCommand } from '../src/commands/config.js';
 
 program
-  .name('mcclaw')
-  .description('Mission Control - Activity logging CLI with daemon-based architecture')
+  .name('mclaw')
+  .description('Mission Claw - Activity logging CLI with daemon-based architecture')
   .version('1.0.0');
 
 // mc daemon start|stop|status
@@ -54,6 +54,14 @@ program
   .description('Show quick stats')
   .option('--db-url <url>', 'Database URL (postgresql:// or file:)')
   .action(statusCommand);
+
+// mc restart
+program
+  .command('restart')
+  .description('Restart the daemon')
+  .option('--port <port>', 'Port for daemon', '3100')
+  .option('--db-url <url>', 'Database URL (postgresql:// or file:)')
+  .action((options) => daemonCommand('restart', options));
 
 // mc dashboard [start|stop|status]
 program

@@ -53,7 +53,7 @@ async function startDashboard(options) {
   }
 
   if (!isRunning) {
-    console.log(chalk.cyan(`Starting Mission Control dashboard on port ${dashPort}...`));
+    console.log(chalk.cyan(`Starting Mission Claw dashboard on port ${dashPort}...`));
     
     const child = spawn('npx', ['next', 'start', '-p', String(dashPort)], {
       cwd: rootDir,

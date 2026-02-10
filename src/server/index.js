@@ -212,5 +212,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Mission Control Headless API running on port ${PORT}`);
+  console.log(`Mission Claw Headless API running on port ${PORT}`);
 });
