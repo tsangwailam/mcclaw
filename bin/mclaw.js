@@ -9,8 +9,8 @@ import { daemonCommand } from '../src/commands/daemon.js';
 import { configCommand } from '../src/commands/config.js';
 
 program
-  .name('mcclaw')
-  .description('Mission Control - Activity logging CLI with daemon-based architecture')
+  .name('mclaw')
+  .description('Mission Claw - Activity logging CLI with daemon-based architecture')
   .version('1.0.0');
 
 // mc daemon start|stop|status
