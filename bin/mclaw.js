@@ -67,6 +67,7 @@ program
 program
   .command('dashboard [action]')
   .description('Manage the web dashboard (start|stop|status)')
+  .option('--port <port>', 'Port for dashboard', '3101')
   .option('--no-open', 'Don\'t open browser automatically')
   .action(dashboardCommand);
 

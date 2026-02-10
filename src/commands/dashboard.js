@@ -35,7 +35,8 @@ export async function dashboardCommand(action, options) {
 
 async function startDashboard(options) {
   const { port: apiPort } = getDaemonInfo();
-  const { pid: dashPid, port: dashPort } = getDashboardInfo();
+  const { pid: dashPid, port: savedPort } = getDashboardInfo();
+  const dashPort = parseInt(options.port) || savedPort || DEFAULT_DASHBOARD_PORT;
   
   // 1. Ensure API is running
   if (!(await isDaemonHealthy(apiPort))) {
