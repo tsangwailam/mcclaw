@@ -35,11 +35,12 @@ export async function dashboardCommand(action, options) {
 
 async function startDashboard(options) {
   const { port: apiPort } = getDaemonInfo();
-  const { pid: dashPid, port: dashPort } = getDashboardInfo();
+  const { pid: dashPid, port: savedPort } = getDashboardInfo();
+  const dashPort = parseInt(options.port) || savedPort || DEFAULT_DASHBOARD_PORT;
   
   // 1. Ensure API is running
   if (!(await isDaemonHealthy(apiPort))) {
-    console.error(chalk.red('API Daemon not running. Start it with: mc daemon start'));
+    console.error(chalk.red('API Daemon not running. Start it with: mclaw daemon start'));
     process.exit(1);
   }
 
@@ -116,16 +117,31 @@ async function stopDashboard() {
 
   console.log(chalk.cyan(`Stopping dashboard on port ${port}...`));
   
-  // Try to find all related processes (Next.js spawns children)
+  // SIGTERM first (graceful shutdown)
+  try {
+    process.kill(pid, 'SIGTERM');
+  } catch {}
+  
   try {
     const pids = execSync(`lsof -ti:${port} 2>/dev/null`, { encoding: 'utf-8' }).trim().split('\n');
     for (const p of pids) {
-      if (p) process.kill(parseInt(p), 'SIGKILL');
+      if (p) try { process.kill(parseInt(p), 'SIGTERM'); } catch {}
     }
   } catch {}
 
+  await new Promise(r => setTimeout(r, 2000));
+
+  // SIGKILL any survivors
   try {
+    process.kill(pid, 0);
     process.kill(pid, 'SIGKILL');
+  } catch {}
+  
+  try {
+    const pids = execSync(`lsof -ti:${port} 2>/dev/null`, { encoding: 'utf-8' }).trim().split('\n');
+    for (const p of pids) {
+      if (p) try { process.kill(parseInt(p), 'SIGKILL'); } catch {}
+    }
   } catch {}
   
   clearDashboardInfo();
@@ -134,7 +150,7 @@ async function stopDashboard() {
 
 async function dashboardStatus() {
   const { pid, port } = getDashboardInfo();
-  const healthy = dashPidIsHealthy(port);
+  const healthy = await dashPidIsHealthy(port);
 
   if (healthy) {
     console.log(chalk.green('Dashboard: running'));

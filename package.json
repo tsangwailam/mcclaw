@@ -1,6 +1,6 @@
 {
-  "name": "mission-control",
-  "version": "0.1.0",
+  "name": "mission-claw",
+  "version": "1.0.0",
   "description": "CLI tool for logging agent activities with embedded dashboard",
   "type": "module",
   "bin": {

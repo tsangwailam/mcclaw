@@ -13,7 +13,7 @@ program
   .description('Mission Claw - Activity logging CLI with daemon-based architecture')
   .version('1.0.0');
 
-// mc daemon start|stop|status
+// mclaw daemon start|stop|status
 program
   .command('daemon <action>')
   .description('Manage the daemon (start|stop|status|restart)')
@@ -21,7 +21,7 @@ program
   .option('--db-url <url>', 'Database URL (postgresql:// or file:)')
   .action(daemonCommand);
 
-// mc log "action" --details "..." --agent X --project Y --status completed --duration "1m 30s"
+// mclaw log "action" --details "..." --agent X --project Y --status completed --duration "1m 30s"
 program
   .command('log <action>')
   .description('Log an activity')
@@ -36,7 +36,7 @@ program
   .option('--db-url <url>', 'Database URL (postgresql:// or file:)')
   .action(logCommand);
 
-// mc list [--agent X] [--project Y] [--status Z] [--limit N]
+// mclaw list [--agent X] [--project Y] [--status Z] [--limit N]
 program
   .command('list')
   .description('List activities')
@@ -48,14 +48,14 @@ program
   .option('--db-url <url>', 'Database URL (postgresql:// or file:)')
   .action(listCommand);
 
-// mc status
+// mclaw status
 program
   .command('status')
   .description('Show quick stats')
   .option('--db-url <url>', 'Database URL (postgresql:// or file:)')
   .action(statusCommand);
 
-// mc restart
+// mclaw restart
 program
   .command('restart')
   .description('Restart the daemon')
@@ -63,21 +63,22 @@ program
   .option('--db-url <url>', 'Database URL (postgresql:// or file:)')
   .action((options) => daemonCommand('restart', options));
 
-// mc dashboard [start|stop|status]
+// mclaw dashboard [start|stop|status]
 program
   .command('dashboard [action]')
   .description('Manage the web dashboard (start|stop|status)')
+  .option('--port <port>', 'Port for dashboard', '3101')
   .option('--no-open', 'Don\'t open browser automatically')
   .action(dashboardCommand);
 
-// mc config set|get|show
+// mclaw config set|get|show
 program
   .command('config <action> [key]')
   .description('Manage configuration (set|get|show)')
   .option('--db-url <url>', 'Database URL to set')
   .action(configCommand);
 
-// mc migrate - run migrations
+// mclaw migrate - run migrations
 program
   .command('migrate')
   .description('Run database migrations')

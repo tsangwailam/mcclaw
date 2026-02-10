@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import Table from 'cli-table3';
 import { getDaemonInfo, isDaemonHealthy, getApiUrl, getDbProvider } from '../lib/config.js';
-import { getPrisma } from '../lib/db.js';
+import { createPrismaClient } from '../lib/db.js';
 
 function formatNumber(n) {
   return n?.toLocaleString() ?? '—';
@@ -21,7 +21,7 @@ export async function listCommand(options) {
   const { port } = getDaemonInfo();
   
   if (!(await isDaemonHealthy(port))) {
-    console.error(chalk.red('Daemon not running. Start it with: mc daemon start'));
+    console.error(chalk.red('Daemon not running. Start it with: mclaw daemon start'));
     console.error(chalk.dim('Or use --db-url for direct database access'));
     process.exit(1);
   }
@@ -51,7 +51,7 @@ export async function listCommand(options) {
 
 async function listDirect(options) {
   try {
-    const prisma = await getPrisma(options.dbUrl);
+    const prisma = await createPrismaClient(options.dbUrl);
     const provider = getDbProvider(options.dbUrl);
     
     const where = {};

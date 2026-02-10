@@ -11,7 +11,7 @@ const CONFIG_FILE = join(MC_DIR, 'config.json');
 
 export const DEFAULT_PORT = 3100;
 export const DEFAULT_DASHBOARD_PORT = 3101;
-const DEFAULT_SQLITE_PATH = join(MC_DIR, 'data', 'mission-control.db');
+const DEFAULT_SQLITE_PATH = join(MC_DIR, 'data', 'mclaw.db');
 
 export function ensureMcDir() {
   if (!existsSync(MC_DIR)) {

@@ -31,7 +31,7 @@ export async function daemonCommand(action, options) {
       return startDaemon(options);
     default:
       console.error(chalk.red(`Unknown daemon action: ${action}`));
-      console.log('Usage: mc daemon <start|stop|status|restart>');
+      console.log('Usage: mclaw daemon <start|stop|status|restart>');
       process.exit(1);
   }
 }
@@ -173,16 +173,28 @@ async function killDaemonProcesses(port) {
   
   const killed = [];
   
-  // SIGKILL all of them
+  // SIGTERM first (graceful)
   for (const pid of allPids) {
     try {
-      process.kill(pid, 'SIGKILL');
+      process.kill(pid, 'SIGTERM');
       killed.push(pid);
     } catch {}
   }
   
   if (killed.length > 0) {
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 2000));
+  }
+  
+  // SIGKILL any survivors
+  for (const pid of allPids) {
+    try {
+      process.kill(pid, 0); // check if still alive
+      process.kill(pid, 'SIGKILL');
+    } catch {} // already dead, good
+  }
+  
+  if (killed.length > 0) {
+    await new Promise(r => setTimeout(r, 500));
   }
   
   return killed;
@@ -211,13 +223,23 @@ async function stopDaemon(options) {
     console.log(chalk.dim(`  PIDs: ${[...allPids].join(', ')}`));
   }
   
-  // Kill all processes
+  // SIGTERM first (graceful shutdown)
   for (const p of allPids) {
-    try { process.kill(p, 'SIGKILL'); } catch {}
+    try { process.kill(p, 'SIGTERM'); } catch {}
   }
   
-  // Wait and verify
-  await new Promise(r => setTimeout(r, 1500));
+  // Wait for graceful shutdown
+  await new Promise(r => setTimeout(r, 2000));
+  
+  // SIGKILL any survivors
+  for (const p of allPids) {
+    try {
+      process.kill(p, 0);
+      process.kill(p, 'SIGKILL');
+    } catch {}
+  }
+  
+  await new Promise(r => setTimeout(r, 500));
   
   // Check if port is free now
   let remaining = findProcessOnPort(targetPort);
@@ -267,7 +289,7 @@ async function daemonStatus(options) {
   } else if (pids.length > 0) {
     console.log(chalk.yellow(`Daemon: process on port ${targetPort} but not responding`));
     console.log(chalk.dim(`  PIDs: ${pids.join(', ')}`));
-    console.log(chalk.dim(`  Try: mc daemon stop`));
+    console.log(chalk.dim(`  Try: mclaw daemon stop`));
   } else {
     console.log(chalk.yellow('Daemon: not running'));
     if (pid) {

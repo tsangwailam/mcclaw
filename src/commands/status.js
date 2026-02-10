@@ -1,12 +1,63 @@
 import chalk from 'chalk';
-import { getDaemonInfo, isDaemonHealthy, getApiUrl, getDbProvider } from '../lib/config.js';
-import { getPrisma } from '../lib/db.js';
+import { getDaemonInfo, isDaemonHealthy, getApiUrl, getDbProvider, getDbUrl, getDashboardInfo, isProcessRunning } from '../lib/config.js';
+import { createPrismaClient } from '../lib/db.js';
 
 function getActivityTime(act) {
   return act.createdAt || act.timestamp;
 }
 
+function redactDbUrl(url) {
+  if (!url) return 'N/A';
+  if (url.startsWith('file:')) {
+    // SQLite - show path but truncate middle if long
+    const path = url.replace('file:', '');
+    if (path.length > 40) {
+      return 'file:...' + path.slice(-30);
+    }
+    return url;
+  }
+  // PostgreSQL/other - redact credentials
+  try {
+    const parsed = new URL(url);
+    if (parsed.password) parsed.password = '****';
+    if (parsed.username) parsed.username = parsed.username.slice(0, 2) + '***';
+    return parsed.toString();
+  } catch {
+    return url.slice(0, 15) + '...';
+  }
+}
+
+async function printServiceStatus() {
+  console.log(chalk.bold.cyan('\n🖥  Service Status\n'));
+
+  // Daemon status
+  const { pid: daemonPid, port: daemonPort } = getDaemonInfo();
+  const daemonPidAlive = daemonPid && isProcessRunning(daemonPid);
+  const daemonHealthy = await isDaemonHealthy(daemonPort);
+  const daemonRunning = daemonPidAlive || daemonHealthy;
+  const daemonStatus = daemonRunning
+    ? chalk.green('● Running') + chalk.dim(` (${daemonPidAlive ? `PID: ${daemonPid}, ` : ''}Port: ${daemonPort})`)
+    : chalk.red('○ Stopped');
+  console.log(`  Daemon:     ${daemonStatus}`);
+
+  // Dashboard status
+  const { pid: dashPid, port: dashPort } = getDashboardInfo();
+  const dashRunning = dashPid && isProcessRunning(dashPid);
+  const dashStatus = dashRunning
+    ? chalk.green('● Running') + chalk.dim(` (PID: ${dashPid}, Port: ${dashPort})`)
+    : chalk.red('○ Stopped');
+  console.log(`  Dashboard:  ${dashStatus}`);
+
+  // Database info
+  const dbUrl = getDbUrl();
+  const provider = getDbProvider(dbUrl);
+  console.log(`  Database:   ${chalk.yellow(provider)} ${chalk.dim(redactDbUrl(dbUrl))}`);
+}
+
 export async function statusCommand(options) {
+  // Always print service status first
+  await printServiceStatus();
+
   // If --db-url provided, use direct database access
   if (options?.dbUrl) {
     return statusDirect(options);
@@ -16,9 +67,9 @@ export async function statusCommand(options) {
   const { port } = getDaemonInfo();
   
   if (!(await isDaemonHealthy(port))) {
-    console.error(chalk.red('Daemon not running. Start it with: mc daemon start'));
-    console.error(chalk.dim('Or use --db-url for direct database access'));
-    process.exit(1);
+    console.log(chalk.dim('\n  Daemon not running — activity stats unavailable.'));
+    console.log(chalk.dim('  Start with: mclaw daemon start\n'));
+    return;
   }
 
   try {
@@ -39,7 +90,7 @@ export async function statusCommand(options) {
 
 async function statusDirect(options) {
   try {
-    const prisma = await getPrisma(options.dbUrl);
+    const prisma = await createPrismaClient(options.dbUrl);
     const provider = getDbProvider(options.dbUrl);
     const dateField = provider === 'postgresql' ? 'timestamp' : 'createdAt';
 
