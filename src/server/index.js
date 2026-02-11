@@ -3,6 +3,7 @@ import { stringify } from 'csv-stringify/sync';
 import XLSX from 'xlsx';
 import { getApiPrisma } from '../lib/db.js';
 import { toCamelCase } from '../lib/utils.js';
+import { createWebSocketServer, broadcastActivity } from '../lib/websocket.js';
 
 const PORT = process.env.PORT || 3001;
 
@@ -261,6 +262,7 @@ async function handlePostActivity(req, res) {
               totalTokens: data.totalTokens || existingInProgress.totalTokens,
             },
           });
+          broadcastActivity(updated);
           res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
           res.end(JSON.stringify(updated));
           return;
@@ -281,6 +283,7 @@ async function handlePostActivity(req, res) {
         },
       });
 
+      broadcastActivity(activity);
       res.writeHead(201, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify(activity));
     } catch (err) {
@@ -332,4 +335,5 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`Mission Claw Headless API running on port ${PORT}`);
+  createWebSocketServer(server, PORT);
 });

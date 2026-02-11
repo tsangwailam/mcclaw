@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useActivityStream } from './hooks/useActivityStream.js';
+import { LiveBadge } from './components/LiveBadge.js';
 
 function formatNumber(n) {
   return n?.toLocaleString() ?? '—';
@@ -143,6 +145,7 @@ const styles = {
 };
 
 export default function Dashboard() {
+  const { isConnected, activities: wsActivities, useWebSocket, setUseWebSocket } = useActivityStream(3001);
   const [activities, setActivities] = useState([]);
   const [stats, setStats] = useState({ total: 0, today: 0, week: 0 });
   const [filterOptions, setFilterOptions] = useState({ agents: [], projects: [], statuses: [] });
@@ -204,10 +207,33 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    // Always fetch initial data on mount and when filters change
     fetchData();
-    const interval = setInterval(fetchData, 10000);
-    return () => clearInterval(interval);
-  }, [filters]);
+    
+    // If WebSocket is not being used, fall back to polling
+    if (!useWebSocket) {
+      const interval = setInterval(fetchData, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [filters, useWebSocket]);
+
+  // Update local activities when WebSocket receives new data
+  useEffect(() => {
+    if (wsActivities.length > 0 && useWebSocket) {
+      // Filter WebSocket activities based on current filters and time range
+      const filtered = wsActivities.filter(act => {
+        const inTimeRange = new Date(act.createdAt) >= new Date(filters.start) && 
+                           new Date(act.createdAt) <= new Date(filters.end);
+        const matchesAgent = filters.agent === 'all' || act.agent === filters.agent;
+        const matchesProject = filters.project === 'all' || act.project === filters.project;
+        const matchesStatus = filters.status === 'all' || act.status === filters.status;
+        
+        return inTimeRange && matchesAgent && matchesProject && matchesStatus;
+      });
+      
+      setActivities(filtered);
+    }
+  }, [wsActivities, filters, useWebSocket]);
 
   async function fetchData() {
     try {
@@ -268,8 +294,9 @@ export default function Dashboard() {
           <span>Mission <span style={{ color: '#f0883e' }}>Claw</span></span>
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <LiveBadge isConnected={isConnected} useWebSocket={useWebSocket} />
           <span style={{ color: '#8b949e', fontSize: '12px' }}>
-            Auto-refreshes 10s
+            {useWebSocket ? 'Live updates' : 'Auto-refreshes 10s'}
           </span>
           <button
             onClick={() => { setLoading(true); fetchData().finally(() => setLoading(false)); }}
