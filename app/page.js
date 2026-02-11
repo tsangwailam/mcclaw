@@ -222,14 +222,17 @@ export default function Dashboard() {
   // Merge WebSocket activities with the current activities list
   // Only in WebSocket mode - polling mode is handled by fetchData()
   useEffect(() => {
+    console.log('[Dashboard] useEffect merge triggered: wsActivities.length=' + wsActivities.length + ', useWebSocket=' + useWebSocket + ', isConnected=' + isConnected);
     if (wsActivities.length > 0 && useWebSocket && isConnected) {
       // Get the latest activity from WebSocket stream
       const latestWsActivity = wsActivities[0];
-      console.log('[Dashboard] 🔔 Merging WebSocket activity:', latestWsActivity.action);
+      console.log('[Dashboard] 🔔 Merging WebSocket activity:', latestWsActivity.id, latestWsActivity.action, 'created:', latestWsActivity.createdAt);
+      console.log('[Dashboard] Filter range:', filters.start, 'to', filters.end);
       
       setActivities((prevActivities) => {
         // Check if activity already exists
         const existingIndex = prevActivities.findIndex(a => a.id === latestWsActivity.id);
+        console.log('[Dashboard] Activity already in list?', existingIndex >= 0, '(index=' + existingIndex + ')');
         
         if (existingIndex >= 0) {
           // Update existing activity in place
@@ -239,20 +242,26 @@ export default function Dashboard() {
           return updated;
         } else {
           // New activity - check if it passes current filters
-          const inTimeRange = new Date(latestWsActivity.createdAt) >= new Date(filters.start) && 
-                             new Date(latestWsActivity.createdAt) <= new Date(filters.end);
+          const activityDate = new Date(latestWsActivity.createdAt);
+          const filterStart = new Date(filters.start);
+          const filterEnd = new Date(filters.end);
+          const inTimeRange = activityDate >= filterStart && activityDate <= filterEnd;
           const matchesAgent = filters.agent === 'all' || latestWsActivity.agent === filters.agent;
           const matchesProject = filters.project === 'all' || latestWsActivity.project === filters.project;
           const matchesStatus = filters.status === 'all' || latestWsActivity.status === filters.status;
           
+          console.log('[Dashboard] Filter checks: timeRange=' + inTimeRange + ', agent=' + matchesAgent + ', project=' + matchesProject + ', status=' + matchesStatus);
+          console.log('[Dashboard]   Activity: agent="' + latestWsActivity.agent + '", project="' + latestWsActivity.project + '", status="' + latestWsActivity.status + '"');
+          console.log('[Dashboard]   Filters: agent="' + filters.agent + '", project="' + filters.project + '", status="' + filters.status + '"');
+          
           if (inTimeRange && matchesAgent && matchesProject && matchesStatus) {
             // Activity matches filters - add to beginning of list
-            console.log('[Dashboard] ✅ Adding new activity (matches filters)');
+            console.log('[Dashboard] ✅ Adding new activity (matches filters) - new list length: ' + (prevActivities.length + 1));
             return [latestWsActivity, ...prevActivities];
           } else {
-            // Activity doesn't match current filters - still add it to the list
-            // but it might not be visible depending on the filters
-            console.log('[Dashboard] ℹ️  Activity filtered out by current filters (will show when filters change)');
+            // Activity doesn't match current filters - don't add it yet
+            // Wait for fetchData() to update the list from database
+            console.log('[Dashboard] ℹ️  Activity does not match filters - waiting for fetchData()');
             return prevActivities;
           }
         }
@@ -269,10 +278,18 @@ export default function Dashboard() {
       if (filters.start) params.append('start', filters.start);
       if (filters.end) params.append('end', filters.end);
 
-      console.log('[Dashboard] 📡 Fetching activities with filters:', Object.fromEntries(params));
-      const res = await fetch(`/api/activity?${params.toString()}`);
+      const queryString = params.toString();
+      console.log('[Dashboard] 📡 Fetching activities with filters:', queryString || '(none)');
+      const res = await fetch(`/api/activity?${queryString}`);
+      if (!res.ok) {
+        console.error('[Dashboard] ❌ Fetch returned status:', res.status);
+        return;
+      }
       const data = await res.json();
       console.log('[Dashboard] 📥 Fetched', data.activities?.length || 0, 'activities');
+      if (data.activities && data.activities.length > 0) {
+        console.log('[Dashboard]   Latest activity:', data.activities[0].id, data.activities[0].action);
+      }
       setActivities(data.activities || []);
       setStats(data.stats || { total: 0, today: 0, week: 0 });
       if (data.filters) {

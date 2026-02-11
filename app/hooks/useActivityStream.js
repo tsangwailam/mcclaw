@@ -45,16 +45,23 @@ export function useActivityStream(wsPort = 3102) {
 
       ws.onmessage = (event) => {
         try {
+          console.log('[useActivityStream] 📨 Raw message received:', event.data.substring(0, 100));
           const message = JSON.parse(event.data);
           
           if (message.type === 'activity') {
-            console.log('[useActivityStream] 🔔 Activity broadcast received:', message.data.id, message.data.action);
+            console.log('[useActivityStream] 🔔 Activity broadcast received:', message.data.id, message.data.action, 'status:', message.data.status);
             // Update activities list with new activity
             setActivities((prev) => {
               // Remove existing activity with same id and add new one at beginning
               const filtered = prev.filter((a) => a.id !== message.data.id);
-              return [message.data, ...filtered];
+              const newList = [message.data, ...filtered];
+              console.log('[useActivityStream] ✅ State updated - new activities count:', newList.length);
+              return newList;
             });
+          } else if (message.type === 'connected') {
+            console.log('[useActivityStream] 📌 Received connection confirmation from server');
+          } else {
+            console.log('[useActivityStream] ⏭️  Ignoring message type:', message.type);
           }
         } catch (err) {
           console.error('[useActivityStream] Error parsing message:', err);
