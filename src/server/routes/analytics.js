@@ -1,4 +1,4 @@
-import { getApiPrisma } from '../lib/db.js';
+import { getApiPrisma } from '../../lib/db.js';
 
 export async function handleGetAgentAnalytics(req, res, url, agentName) {
   try {
