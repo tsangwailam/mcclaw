@@ -7,6 +7,7 @@ import { statusCommand } from '../src/commands/status.js';
 import { dashboardCommand } from '../src/commands/dashboard.js';
 import { daemonCommand } from '../src/commands/daemon.js';
 import { configCommand } from '../src/commands/config.js';
+import { exportCommand } from '../src/commands/export.js';
 
 program
   .name('mclaw')
@@ -77,6 +78,20 @@ program
   .description('Manage configuration (set|get|show)')
   .option('--db-url <url>', 'Database URL to set')
   .action(configCommand);
+
+// mclaw export [format] --agent X --project Y --status Z --start-date DATE --end-date DATE --output FILE
+program
+  .command('export [format]')
+  .description('Export activities to CSV, JSON, or Excel')
+  .option('-a, --agent <agent>', 'Filter by agent')
+  .option('-p, --project <project>', 'Filter by project')
+  .option('-s, --status <status>', 'Filter by status')
+  .option('--start-date <date>', 'Start date (YYYY-MM-DD or ISO format)')
+  .option('--end-date <date>', 'End date (YYYY-MM-DD or ISO format)')
+  .option('-o, --output <file>', 'Output filename')
+  .option('-l, --limit <n>', 'Maximum number of records', parseInt, '10000')
+  .option('--db-url <url>', 'Database URL (postgresql:// or file:)')
+  .action(exportCommand);
 
 // mclaw migrate - run migrations
 program
