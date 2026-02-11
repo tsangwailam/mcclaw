@@ -415,7 +415,14 @@ export default function Dashboard() {
                 {act.agent ? <span style={styles.badge}>{act.agent}</span> : '—'}
               </td>
               <td style={styles.td}>
-                {act.project ? <span style={styles.badge}>{act.project}</span> : '—'}
+                {act.project ? (
+                  <a
+                    href={`/projects/${encodeURIComponent(act.project)}`}
+                    style={{ ...styles.badge, cursor: 'pointer', textDecoration: 'none', borderBottom: '1px solid #58a6ff', color: '#58a6ff' }}
+                  >
+                    {act.project}
+                  </a>
+                ) : '—'}
               </td>
               <td style={styles.td}>{act.duration || '—'}</td>
               <td style={styles.td}>
