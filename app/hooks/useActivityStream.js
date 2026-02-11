@@ -6,71 +6,117 @@ export function useActivityStream(wsPort = 3102) {
   const [useWebSocket, setUseWebSocket] = useState(true);
   const wsRef = useRef(null);
   const pollIntervalRef = useRef(null);
-  const activitiesRef = useRef(new Map()); // Track activities by ID
+  const reconnectAttempts = useRef(0);
+  const maxReconnectAttempts = 3; // After 3 failures, switch to polling
 
   const connectWebSocket = useCallback(() => {
-    if (!useWebSocket) return;
+    if (!useWebSocket || wsRef.current?.readyState === WebSocket.OPEN) return;
 
     try {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      // Try to use the same hostname and port as the current page first
+      // But if that fails, it will use the explicit wsPort
       const wsUrl = `${protocol}//${window.location.hostname}:${wsPort}/api/activity-stream`;
       
-      console.log('[WebSocket] Connecting to', wsUrl);
+      console.log('[useActivityStream] 🔌 Attempting WebSocket connection to:', wsUrl);
       const ws = new WebSocket(wsUrl);
+      
+      // Set a connection timeout
+      const connectTimeout = setTimeout(() => {
+        if (ws.readyState !== WebSocket.OPEN) {
+          console.warn('[useActivityStream] ⏱️  WebSocket connection timeout');
+          ws.close();
+          reconnectAttempts.current++;
+          if (reconnectAttempts.current >= maxReconnectAttempts) {
+            console.warn('[useActivityStream] Max reconnect attempts reached, falling back to polling');
+            setUseWebSocket(false);
+          } else {
+            setTimeout(connectWebSocket, 3000);
+          }
+        }
+      }, 5000); // 5 second timeout
 
       ws.onopen = () => {
-        console.log('[WebSocket] Connected');
+        clearTimeout(connectTimeout);
+        console.log('[useActivityStream] ✅ WebSocket connected successfully');
         setIsConnected(true);
+        reconnectAttempts.current = 0; // Reset on successful connection
       };
 
       ws.onmessage = (event) => {
-        const message = JSON.parse(event.data);
-        if (message.type === 'activity') {
-          console.log('[WebSocket] Activity received:', message.data.id, message.data.action);
-          // Update activities list with new activity
-          setActivities((prev) => {
-            // Remove existing activity with same id and add new one at beginning
-            const filtered = prev.filter((a) => a.id !== message.data.id);
-            return [message.data, ...filtered];
-          });
+        try {
+          const message = JSON.parse(event.data);
+          
+          if (message.type === 'activity') {
+            console.log('[useActivityStream] 🔔 Activity broadcast received:', message.data.id, message.data.action);
+            // Update activities list with new activity
+            setActivities((prev) => {
+              // Remove existing activity with same id and add new one at beginning
+              const filtered = prev.filter((a) => a.id !== message.data.id);
+              return [message.data, ...filtered];
+            });
+          }
+        } catch (err) {
+          console.error('[useActivityStream] Error parsing message:', err);
         }
       };
 
       ws.onclose = () => {
-        console.log('[WebSocket] Disconnected, attempting reconnect in 3s');
+        clearTimeout(connectTimeout);
+        console.warn('[useActivityStream] ⚠️  WebSocket disconnected');
         setIsConnected(false);
         // Try to reconnect every 3 seconds
-        setTimeout(connectWebSocket, 3000);
+        if (useWebSocket && reconnectAttempts.current < maxReconnectAttempts) {
+          console.log(`[useActivityStream] Reconnect attempt ${reconnectAttempts.current + 1}/${maxReconnectAttempts} in 3s...`);
+          reconnectAttempts.current++;
+          setTimeout(connectWebSocket, 3000);
+        } else if (reconnectAttempts.current >= maxReconnectAttempts) {
+          console.warn('[useActivityStream] Switching to polling mode');
+          setUseWebSocket(false);
+        }
       };
 
       ws.onerror = (error) => {
-        console.warn('[WebSocket] Error:', error);
+        clearTimeout(connectTimeout);
+        console.error('[useActivityStream] ❌ WebSocket error:', error.message || error);
         setIsConnected(false);
-        // Fall back to polling
-        setUseWebSocket(false);
+        reconnectAttempts.current++;
+        
+        if (reconnectAttempts.current >= maxReconnectAttempts) {
+          console.warn('[useActivityStream] WebSocket failed, switching to polling mode');
+          setUseWebSocket(false);
+        } else {
+          console.log(`[useActivityStream] Will retry in 3s (attempt ${reconnectAttempts.current}/${maxReconnectAttempts})`);
+          setTimeout(connectWebSocket, 3000);
+        }
       };
 
       wsRef.current = ws;
     } catch (error) {
-      console.warn('[WebSocket] Connection failed:', error);
+      console.error('[useActivityStream] ❌ Connection initialization failed:', error);
       setUseWebSocket(false);
     }
-  }, [useWebSocket, wsPort]);
+  }, [useWebSocket]);
 
   const pollActivities = useCallback(async () => {
     try {
+      console.log('[useActivityStream] 📡 Polling for activities...');
       const res = await fetch('/api/activity?limit=50');
       if (res.ok) {
         const data = await res.json();
+        console.log('[useActivityStream] 📥 Polling returned', data.activities?.length || 0, 'activities');
         setActivities(data.activities || []);
+      } else {
+        console.warn('[useActivityStream] Polling returned status:', res.status);
       }
     } catch (error) {
-      console.error('Polling error:', error);
+      console.error('[useActivityStream] ❌ Polling error:', error);
     }
   }, []);
 
   useEffect(() => {
     if (useWebSocket) {
+      console.log('[useActivityStream] Using WebSocket mode');
       connectWebSocket();
       return () => {
         if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -79,8 +125,9 @@ export function useActivityStream(wsPort = 3102) {
       };
     } else {
       // Fall back to polling if WebSocket is disabled
-      pollActivities();
-      const interval = setInterval(pollActivities, 10000);
+      console.log('[useActivityStream] Using polling mode (every 5 seconds)');
+      pollActivities(); // Poll immediately
+      const interval = setInterval(pollActivities, 5000); // Poll every 5 seconds in fallback mode
       pollIntervalRef.current = interval;
       return () => clearInterval(interval);
     }

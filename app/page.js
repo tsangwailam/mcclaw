@@ -223,6 +223,7 @@ export default function Dashboard() {
     if (wsActivities.length > 0 && useWebSocket) {
       // Get the latest activity from WebSocket stream
       const latestWsActivity = wsActivities[0];
+      console.log('[Dashboard] 🔔 WebSocket activity received:', latestWsActivity.action);
       
       // Check if this activity is already in the list
       setActivities((prevActivities) => {
@@ -231,6 +232,7 @@ export default function Dashboard() {
         
         if (existingIndex >= 0) {
           // Update existing activity (it was updated)
+          console.log('[Dashboard] 🔄 Updating existing activity ID:', latestWsActivity.id);
           const updated = [...prevActivities];
           updated[existingIndex] = latestWsActivity;
           return updated;
@@ -242,11 +244,22 @@ export default function Dashboard() {
           const matchesProject = filters.project === 'all' || latestWsActivity.project === filters.project;
           const matchesStatus = filters.status === 'all' || latestWsActivity.status === filters.status;
           
+          console.log('[Dashboard] 📋 Checking filters for new activity:', {
+            action: latestWsActivity.action,
+            inTimeRange,
+            matchesAgent,
+            matchesProject,
+            matchesStatus
+          });
+          
           if (inTimeRange && matchesAgent && matchesProject && matchesStatus) {
             // Add to the beginning of the list
+            console.log('[Dashboard] ✅ Adding new activity to list');
             return [latestWsActivity, ...prevActivities];
+          } else {
+            console.log('[Dashboard] ⚠️  Activity filtered out - not matching current filters');
+            return prevActivities;
           }
-          return prevActivities;
         }
       });
     }
@@ -261,15 +274,17 @@ export default function Dashboard() {
       if (filters.start) params.append('start', filters.start);
       if (filters.end) params.append('end', filters.end);
 
+      console.log('[Dashboard] 📡 Fetching activities with filters:', Object.fromEntries(params));
       const res = await fetch(`/api/activity?${params.toString()}`);
       const data = await res.json();
+      console.log('[Dashboard] 📥 Fetched', data.activities?.length || 0, 'activities');
       setActivities(data.activities || []);
       setStats(data.stats || { total: 0, today: 0, week: 0 });
       if (data.filters) {
         setFilterOptions(data.filters);
       }
     } catch (err) {
-      console.error('Failed to fetch:', err);
+      console.error('[Dashboard] ❌ Failed to fetch:', err);
     } finally {
       setLoading(false);
     }
