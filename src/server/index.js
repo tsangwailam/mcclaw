@@ -7,7 +7,7 @@ import { createWebSocketServer, broadcastActivity } from '../lib/websocket.js';
 import { handleGetAgentAnalytics, handleGetAllAgentsAnalytics } from './routes/analytics.js';
 import { handleSearch, handleSearchAutocomplete } from './routes/search.js';
 
-const PORT = process.env.PORT || 3100;
+const PORT = process.env.PORT || 3101;
 const WS_PORT = process.env.WS_PORT || 3102;
 
 async function handleGetActivity(req, res, url) {

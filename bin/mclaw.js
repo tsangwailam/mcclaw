@@ -19,7 +19,7 @@ program
 program
   .command('daemon <action>')
   .description('Manage the daemon (start|stop|status|restart)')
-  .option('--port <port>', 'Port for daemon', '3100')
+  .option('--port <port>', 'Port for daemon', '3101')
   .option('--db-url <url>', 'Database URL (postgresql:// or file:)')
   .action(daemonCommand);
 
@@ -61,7 +61,7 @@ program
 program
   .command('restart')
   .description('Restart the daemon')
-  .option('--port <port>', 'Port for daemon', '3100')
+  .option('--port <port>', 'Port for daemon', '3101')
   .option('--db-url <url>', 'Database URL (postgresql:// or file:)')
   .action((options) => daemonCommand('restart', options));
 
@@ -69,7 +69,7 @@ program
 program
   .command('dashboard [action]')
   .description('Manage the web dashboard (start|stop|status)')
-  .option('--port <port>', 'Port for dashboard', '3101')
+  .option('--port <port>', 'Port for dashboard', '3100')
   .option('--no-open', 'Don\'t open browser automatically')
   .action(dashboardCommand);
 
