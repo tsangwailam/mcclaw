@@ -162,6 +162,10 @@ export default function Dashboard() {
   });
   const [activeQuickFilter, setActiveQuickFilter] = useState('24h');
   const [loading, setLoading] = useState(true);
+  const [showCustomPicker, setShowCustomPicker] = useState(false);
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
+  const [customLabel, setCustomLabel] = useState('');
 
   const quickFilterOptions = [
     { label: '1h', minutes: 60 },
@@ -176,10 +180,27 @@ export default function Dashboard() {
     const start = new Date(now.getTime() - minutes * 60 * 1000);
     setFilters(prev => ({
       ...prev,
-      start: start.toISOString(),  // Full ISO timestamp for precise filtering
+      start: start.toISOString(),
       end: now.toISOString(),
     }));
     setActiveQuickFilter(label);
+    setCustomLabel('');
+  };
+
+  const applyCustomRange = () => {
+    if (!customStart || !customEnd) return;
+    const s = new Date(customStart);
+    const e = new Date(customEnd);
+    if (isNaN(s.getTime()) || isNaN(e.getTime())) return;
+    setFilters(prev => ({
+      ...prev,
+      start: s.toISOString(),
+      end: e.toISOString(),
+    }));
+    const fmt = (d) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    setCustomLabel(`${fmt(s)} – ${fmt(e)}`);
+    setActiveQuickFilter('custom');
+    setShowCustomPicker(false);
   };
 
   useEffect(() => {
@@ -323,7 +344,7 @@ export default function Dashboard() {
 
         <div style={styles.filterGroup}>
           <label style={styles.label}>Time Range</label>
-          <div style={{ display: 'flex', gap: '4px' }}>
+          <div style={{ display: 'flex', gap: '4px', position: 'relative' }}>
             {quickFilterOptions.map(opt => (
               <button
                 key={opt.label}
@@ -343,6 +364,96 @@ export default function Dashboard() {
                 {opt.label}
               </button>
             ))}
+            <button
+              onClick={() => {
+                if (!showCustomPicker) {
+                  setCustomStart(formatDateForInput(filters.start));
+                  setCustomEnd(formatDateForInput(filters.end));
+                }
+                setShowCustomPicker(!showCustomPicker);
+              }}
+              style={{
+                padding: '6px 10px',
+                fontSize: '12px',
+                fontWeight: '500',
+                borderRadius: '6px',
+                border: activeQuickFilter === 'custom' ? '1px solid #f0883e' : '1px solid transparent',
+                cursor: 'pointer',
+                background: activeQuickFilter === 'custom' ? '#f0883e22' : '#30363d',
+                color: activeQuickFilter === 'custom' ? '#f0883e' : '#c9d1d9',
+                transition: 'all 0.2s',
+              }}
+            >
+              {activeQuickFilter === 'custom' && customLabel ? customLabel : 'Custom'}
+            </button>
+            {showCustomPicker && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                marginTop: '8px',
+                background: '#161b22',
+                border: '1px solid #30363d',
+                borderRadius: '8px',
+                padding: '16px',
+                zIndex: 100,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                minWidth: '260px',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+              }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={styles.label}>Start</label>
+                  <input
+                    type="datetime-local"
+                    value={customStart}
+                    onChange={e => setCustomStart(e.target.value)}
+                    style={styles.input}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={styles.label}>End</label>
+                  <input
+                    type="datetime-local"
+                    value={customEnd}
+                    onChange={e => setCustomEnd(e.target.value)}
+                    style={styles.input}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => setShowCustomPicker(false)}
+                    style={{
+                      padding: '6px 14px',
+                      fontSize: '12px',
+                      borderRadius: '6px',
+                      border: '1px solid #30363d',
+                      background: 'transparent',
+                      color: '#8b949e',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={applyCustomRange}
+                    style={{
+                      padding: '6px 14px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      borderRadius: '6px',
+                      border: '1px solid #f0883e',
+                      background: '#f0883e',
+                      color: '#fff',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
