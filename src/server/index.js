@@ -7,7 +7,8 @@ import { createWebSocketServer, broadcastActivity } from '../lib/websocket.js';
 import { handleGetAgentAnalytics, handleGetAllAgentsAnalytics } from './routes/analytics.js';
 import { handleSearch, handleSearchAutocomplete } from './routes/search.js';
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3100;
+const WS_PORT = process.env.WS_PORT || 3102;
 
 async function handleGetActivity(req, res, url) {
   try {
@@ -352,7 +353,14 @@ const server = http.createServer(async (req, res) => {
   res.end();
 });
 
+// Create separate HTTP server for WebSocket on port 3102
+const wsServer = http.createServer();
+
 server.listen(PORT, () => {
   console.log(`Mission Claw Headless API running on port ${PORT}`);
-  createWebSocketServer(server, PORT);
+});
+
+wsServer.listen(WS_PORT, () => {
+  console.log(`Mission Claw WebSocket server running on port ${WS_PORT}`);
+  createWebSocketServer(wsServer, WS_PORT);
 });

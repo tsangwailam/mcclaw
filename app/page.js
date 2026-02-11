@@ -145,7 +145,7 @@ const styles = {
 };
 
 export default function Dashboard() {
-  const { isConnected, activities: wsActivities, useWebSocket, setUseWebSocket } = useActivityStream(3001);
+  const { isConnected, activities: wsActivities, useWebSocket, setUseWebSocket } = useActivityStream(3102);
   const [activities, setActivities] = useState([]);
   const [stats, setStats] = useState({ total: 0, today: 0, week: 0 });
   const [filterOptions, setFilterOptions] = useState({ agents: [], projects: [], statuses: [] });
@@ -315,8 +315,8 @@ export default function Dashboard() {
               textDecoration: 'none',
               transition: 'all 0.2s',
             }}
-            onMouseEnter={e => { e.style.background = '#8b5cf6'; e.style.color = '#fff'; }}
-            onMouseLeave={e => { e.style.background = 'transparent'; e.style.color = '#8b5cf6'; }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#8b5cf6'; e.currentTarget.style.color = '#fff'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#8b5cf6'; }}
             title="Search activities"
           >
             🔍 Search
@@ -338,8 +338,8 @@ export default function Dashboard() {
               textDecoration: 'none',
               transition: 'all 0.2s',
             }}
-            onMouseEnter={e => { e.style.background = '#58a6ff'; e.style.color = '#fff'; }}
-            onMouseLeave={e => { e.style.background = 'transparent'; e.style.color = '#58a6ff'; }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#58a6ff'; e.currentTarget.style.color = '#fff'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#58a6ff'; }}
             title="View agent analytics"
           >
             📊 Analytics

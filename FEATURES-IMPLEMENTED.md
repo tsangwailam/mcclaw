@@ -47,7 +47,7 @@ Successfully implemented all 4 feature ideas from the brainstorm document. Each 
 **Commit:** [c87d8a0](https://github.com/tsangwailam/mission-control-cli/commit/c87d8a0)
 
 ### Implementation Details:
-- **WebSocket Server:** Port 3001/api/activity-stream
+- **WebSocket Server:** Port 3102/api/activity-stream
   - Uses `ws` npm package for WebSocket protocol
   - Non-blocking server upgrade handler
   - Automatic client cleanup on disconnect
@@ -234,7 +234,7 @@ node bin/mclaw.js search "keyword" --fuzzy
 
 # Test dashboard
 npm run dashboard
-# Visit http://localhost:3001
+# Visit http://localhost:3102 for WebSocket server
 # Check: Live badge, Analytics link, Search link
 ```
 

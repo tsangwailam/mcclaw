@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 
-export function useActivityStream(wsPort = 3001) {
+export function useActivityStream(wsPort = 3102) {
   const [isConnected, setIsConnected] = useState(false);
   const [activities, setActivities] = useState([]);
   const [useWebSocket, setUseWebSocket] = useState(true);

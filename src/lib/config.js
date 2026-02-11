@@ -9,8 +9,8 @@ const DASHBOARD_PID_FILE = join(MC_DIR, 'dashboard.pid');
 const DASHBOARD_PORT_FILE = join(MC_DIR, 'dashboard.port');
 const CONFIG_FILE = join(MC_DIR, 'config.json');
 
-export const DEFAULT_PORT = 3100;
-export const DEFAULT_DASHBOARD_PORT = 3101;
+export const DEFAULT_PORT = 3101;
+export const DEFAULT_DASHBOARD_PORT = 3100;
 const DEFAULT_SQLITE_PATH = join(MC_DIR, 'data', 'mclaw.db');
 
 export function ensureMcDir() {

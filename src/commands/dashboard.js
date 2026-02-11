@@ -56,7 +56,7 @@ async function startDashboard(options) {
   if (!isRunning) {
     console.log(chalk.cyan(`Starting Mission Claw dashboard on port ${dashPort}...`));
     
-    const child = spawn('npx', ['next', 'start', '-p', String(dashPort)], {
+    const child = spawn('npx', ['next', 'dev', '-p', String(dashPort)], {
       cwd: rootDir,
       detached: true,
       stdio: 'ignore',
