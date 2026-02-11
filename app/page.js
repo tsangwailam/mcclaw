@@ -218,20 +218,37 @@ export default function Dashboard() {
   }, [filters, useWebSocket]);
 
   // Update local activities when WebSocket receives new data
+  // Instead of replacing, merge new activities with existing ones
   useEffect(() => {
     if (wsActivities.length > 0 && useWebSocket) {
-      // Filter WebSocket activities based on current filters and time range
-      const filtered = wsActivities.filter(act => {
-        const inTimeRange = new Date(act.createdAt) >= new Date(filters.start) && 
-                           new Date(act.createdAt) <= new Date(filters.end);
-        const matchesAgent = filters.agent === 'all' || act.agent === filters.agent;
-        const matchesProject = filters.project === 'all' || act.project === filters.project;
-        const matchesStatus = filters.status === 'all' || act.status === filters.status;
-        
-        return inTimeRange && matchesAgent && matchesProject && matchesStatus;
-      });
+      // Get the latest activity from WebSocket stream
+      const latestWsActivity = wsActivities[0];
       
-      setActivities(filtered);
+      // Check if this activity is already in the list
+      setActivities((prevActivities) => {
+        // Check if activity already exists
+        const existingIndex = prevActivities.findIndex(a => a.id === latestWsActivity.id);
+        
+        if (existingIndex >= 0) {
+          // Update existing activity (it was updated)
+          const updated = [...prevActivities];
+          updated[existingIndex] = latestWsActivity;
+          return updated;
+        } else {
+          // New activity - check if it passes current filters
+          const inTimeRange = new Date(latestWsActivity.createdAt) >= new Date(filters.start) && 
+                             new Date(latestWsActivity.createdAt) <= new Date(filters.end);
+          const matchesAgent = filters.agent === 'all' || latestWsActivity.agent === filters.agent;
+          const matchesProject = filters.project === 'all' || latestWsActivity.project === filters.project;
+          const matchesStatus = filters.status === 'all' || latestWsActivity.status === filters.status;
+          
+          if (inTimeRange && matchesAgent && matchesProject && matchesStatus) {
+            // Add to the beginning of the list
+            return [latestWsActivity, ...prevActivities];
+          }
+          return prevActivities;
+        }
+      });
     }
   }, [wsActivities, filters, useWebSocket]);
 

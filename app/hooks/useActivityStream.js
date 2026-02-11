@@ -6,6 +6,7 @@ export function useActivityStream(wsPort = 3102) {
   const [useWebSocket, setUseWebSocket] = useState(true);
   const wsRef = useRef(null);
   const pollIntervalRef = useRef(null);
+  const activitiesRef = useRef(new Map()); // Track activities by ID
 
   const connectWebSocket = useCallback(() => {
     if (!useWebSocket) return;
@@ -14,18 +15,21 @@ export function useActivityStream(wsPort = 3102) {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsUrl = `${protocol}//${window.location.hostname}:${wsPort}/api/activity-stream`;
       
+      console.log('[WebSocket] Connecting to', wsUrl);
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
+        console.log('[WebSocket] Connected');
         setIsConnected(true);
       };
 
       ws.onmessage = (event) => {
         const message = JSON.parse(event.data);
         if (message.type === 'activity') {
+          console.log('[WebSocket] Activity received:', message.data.id, message.data.action);
           // Update activities list with new activity
           setActivities((prev) => {
-            // Remove existing activity with same id and add new one
+            // Remove existing activity with same id and add new one at beginning
             const filtered = prev.filter((a) => a.id !== message.data.id);
             return [message.data, ...filtered];
           });
@@ -33,13 +37,14 @@ export function useActivityStream(wsPort = 3102) {
       };
 
       ws.onclose = () => {
+        console.log('[WebSocket] Disconnected, attempting reconnect in 3s');
         setIsConnected(false);
         // Try to reconnect every 3 seconds
         setTimeout(connectWebSocket, 3000);
       };
 
       ws.onerror = (error) => {
-        console.warn('WebSocket error:', error);
+        console.warn('[WebSocket] Error:', error);
         setIsConnected(false);
         // Fall back to polling
         setUseWebSocket(false);
@@ -47,7 +52,7 @@ export function useActivityStream(wsPort = 3102) {
 
       wsRef.current = ws;
     } catch (error) {
-      console.warn('WebSocket connection failed:', error);
+      console.warn('[WebSocket] Connection failed:', error);
       setUseWebSocket(false);
     }
   }, [useWebSocket, wsPort]);
