@@ -125,7 +125,7 @@ const styles = {
     borderRadius: '12px',
     fontSize: '12px',
     fontWeight: '500',
-    background: status === 'completed' ? '#238636' : 
+    background: status === 'completed' ? '#238636' :
                 status === 'failed' ? '#da3633' : '#9e6a03',
     color: '#fff',
   }),
@@ -150,7 +150,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState({ total: 0, today: 0, week: 0 });
   const [filterOptions, setFilterOptions] = useState({ agents: [], projects: [], statuses: [] });
   const [lastFetchTime, setLastFetchTime] = useState(null);
-  
+
   // Default to last 24 hours
   const now = new Date();
   const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -210,7 +210,7 @@ export default function Dashboard() {
   useEffect(() => {
     // Always fetch initial data on mount and when filters change
     fetchData();
-    
+
     // In polling mode, fetch updates every 5 seconds
     if (!useWebSocket) {
       console.log('[Dashboard] Polling mode active - fetching every 5 seconds');
@@ -228,12 +228,12 @@ export default function Dashboard() {
       const latestWsActivity = wsActivities[0];
       console.log('[Dashboard] 🔔 Merging WebSocket activity:', latestWsActivity.id, latestWsActivity.action, 'created:', latestWsActivity.createdAt);
       console.log('[Dashboard] Filter range:', filters.start, 'to', filters.end);
-      
+
       setActivities((prevActivities) => {
         // Check if activity already exists
         const existingIndex = prevActivities.findIndex(a => a.id === latestWsActivity.id);
         console.log('[Dashboard] Activity already in list?', existingIndex >= 0, '(index=' + existingIndex + ')');
-        
+
         if (existingIndex >= 0) {
           // Update existing activity in place
           console.log('[Dashboard] 🔄 Updating existing activity');
@@ -241,19 +241,30 @@ export default function Dashboard() {
           updated[existingIndex] = latestWsActivity;
           return updated;
         } else {
+
+          // Update filters if not using custom range
+          if (activeQuickFilter !== 'custom') {
+            const quickFilterOption = quickFilterOptions.find(opt => opt.label === activeQuickFilter);
+            console.log('[Dashboard] Updating filters to quick filter:', activeQuickFilter, quickFilterOption)
+            console.log('[Dashboard] Minutes:', quickFilterOption.minutes);
+            filters.start = new Date(new Date().getTime() - quickFilterOption.minutes * 60 * 1000).toISOString();
+            filters.end = new Date(new Date().getTime() + 1000).toISOString();
+          }
+
           // New activity - check if it passes current filters
           const activityDate = new Date(latestWsActivity.createdAt);
           const filterStart = new Date(filters.start);
           const filterEnd = new Date(filters.end);
-          const inTimeRange = activityDate >= filterStart && activityDate <= filterEnd;
+          const inTimeRange = (activityDate >= filterStart) && (activityDate <= filterEnd);
           const matchesAgent = filters.agent === 'all' || latestWsActivity.agent === filters.agent;
           const matchesProject = filters.project === 'all' || latestWsActivity.project === filters.project;
           const matchesStatus = filters.status === 'all' || latestWsActivity.status === filters.status;
-          
+
+          console.log('[Dashboard] Time range:', activityDate >= filterStart, '&&', activityDate <= filterEnd);
           console.log('[Dashboard] Filter checks: timeRange=' + inTimeRange + ', agent=' + matchesAgent + ', project=' + matchesProject + ', status=' + matchesStatus);
           console.log('[Dashboard]   Activity: agent="' + latestWsActivity.agent + '", project="' + latestWsActivity.project + '", status="' + latestWsActivity.status + '"');
           console.log('[Dashboard]   Filters: agent="' + filters.agent + '", project="' + filters.project + '", status="' + filters.status + '"');
-          
+
           if (inTimeRange && matchesAgent && matchesProject && matchesStatus) {
             // Activity matches filters - add to beginning of list
             console.log('[Dashboard] ✅ Adding new activity (matches filters) - new list length: ' + (prevActivities.length + 1));
@@ -416,10 +427,10 @@ export default function Dashboard() {
       <div style={styles.filterBar}>
         <div style={styles.filterGroup}>
           <label style={styles.label}>Agent</label>
-          <select 
-            name="agent" 
-            value={filters.agent} 
-            onChange={handleFilterChange} 
+          <select
+            name="agent"
+            value={filters.agent}
+            onChange={handleFilterChange}
             style={styles.select}
           >
             <option value="all">All Agents</option>
@@ -431,10 +442,10 @@ export default function Dashboard() {
 
         <div style={styles.filterGroup}>
           <label style={styles.label}>Project</label>
-          <select 
-            name="project" 
-            value={filters.project} 
-            onChange={handleFilterChange} 
+          <select
+            name="project"
+            value={filters.project}
+            onChange={handleFilterChange}
             style={styles.select}
           >
             <option value="all">All Projects</option>
@@ -446,10 +457,10 @@ export default function Dashboard() {
 
         <div style={styles.filterGroup}>
           <label style={styles.label}>Status</label>
-          <select 
-            name="status" 
-            value={filters.status} 
-            onChange={handleFilterChange} 
+          <select
+            name="status"
+            value={filters.status}
+            onChange={handleFilterChange}
             style={styles.select}
           >
             <option value="all">All Statuses</option>
@@ -574,14 +585,14 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <button 
+        <button
           onClick={() => {
-            setFilters({ 
-              agent: 'all', 
-              project: 'all', 
-              status: 'all', 
-              start: defaultStart, 
-              end: defaultEnd 
+            setFilters({
+              agent: 'all',
+              project: 'all',
+              status: 'all',
+              start: defaultStart,
+              end: defaultEnd
             });
             setActiveQuickFilter('24h');
           }}
@@ -672,7 +683,7 @@ export default function Dashboard() {
           ))}
         </tbody>
       </table>
-      
+
       {activities.length === 0 && (
         <p style={{ textAlign: 'center', color: '#8b949e', padding: '40px' }}>
           No activities logged yet. Use <code>mc log "action"</code> to get started.
