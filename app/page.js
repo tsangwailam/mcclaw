@@ -149,6 +149,7 @@ export default function Dashboard() {
   const [activities, setActivities] = useState([]);
   const [stats, setStats] = useState({ total: 0, today: 0, week: 0 });
   const [filterOptions, setFilterOptions] = useState({ agents: [], projects: [], statuses: [] });
+  const [lastFetchTime, setLastFetchTime] = useState(null);
   
   // Default to last 24 hours
   const now = new Date();
@@ -210,29 +211,29 @@ export default function Dashboard() {
     // Always fetch initial data on mount and when filters change
     fetchData();
     
-    // If WebSocket is not being used, fall back to polling
+    // In polling mode, fetch updates every 5 seconds
     if (!useWebSocket) {
-      const interval = setInterval(fetchData, 10000);
+      console.log('[Dashboard] Polling mode active - fetching every 5 seconds');
+      const interval = setInterval(fetchData, 5000);
       return () => clearInterval(interval);
     }
   }, [filters, useWebSocket]);
 
-  // Update local activities when WebSocket receives new data
-  // Instead of replacing, merge new activities with existing ones
+  // Merge WebSocket activities with the current activities list
+  // Only in WebSocket mode - polling mode is handled by fetchData()
   useEffect(() => {
-    if (wsActivities.length > 0 && useWebSocket) {
+    if (wsActivities.length > 0 && useWebSocket && isConnected) {
       // Get the latest activity from WebSocket stream
       const latestWsActivity = wsActivities[0];
-      console.log('[Dashboard] 🔔 WebSocket activity received:', latestWsActivity.action);
+      console.log('[Dashboard] 🔔 Merging WebSocket activity:', latestWsActivity.action);
       
-      // Check if this activity is already in the list
       setActivities((prevActivities) => {
         // Check if activity already exists
         const existingIndex = prevActivities.findIndex(a => a.id === latestWsActivity.id);
         
         if (existingIndex >= 0) {
-          // Update existing activity (it was updated)
-          console.log('[Dashboard] 🔄 Updating existing activity ID:', latestWsActivity.id);
+          // Update existing activity in place
+          console.log('[Dashboard] 🔄 Updating existing activity');
           const updated = [...prevActivities];
           updated[existingIndex] = latestWsActivity;
           return updated;
@@ -244,26 +245,20 @@ export default function Dashboard() {
           const matchesProject = filters.project === 'all' || latestWsActivity.project === filters.project;
           const matchesStatus = filters.status === 'all' || latestWsActivity.status === filters.status;
           
-          console.log('[Dashboard] 📋 Checking filters for new activity:', {
-            action: latestWsActivity.action,
-            inTimeRange,
-            matchesAgent,
-            matchesProject,
-            matchesStatus
-          });
-          
           if (inTimeRange && matchesAgent && matchesProject && matchesStatus) {
-            // Add to the beginning of the list
-            console.log('[Dashboard] ✅ Adding new activity to list');
+            // Activity matches filters - add to beginning of list
+            console.log('[Dashboard] ✅ Adding new activity (matches filters)');
             return [latestWsActivity, ...prevActivities];
           } else {
-            console.log('[Dashboard] ⚠️  Activity filtered out - not matching current filters');
+            // Activity doesn't match current filters - still add it to the list
+            // but it might not be visible depending on the filters
+            console.log('[Dashboard] ℹ️  Activity filtered out by current filters (will show when filters change)');
             return prevActivities;
           }
         }
       });
     }
-  }, [wsActivities, filters, useWebSocket]);
+  }, [wsActivities, filters, useWebSocket, isConnected]);
 
   async function fetchData() {
     try {

@@ -98,22 +98,6 @@ export function useActivityStream(wsPort = 3102) {
     }
   }, [useWebSocket]);
 
-  const pollActivities = useCallback(async () => {
-    try {
-      console.log('[useActivityStream] 📡 Polling for activities...');
-      const res = await fetch('/api/activity?limit=50');
-      if (res.ok) {
-        const data = await res.json();
-        console.log('[useActivityStream] 📥 Polling returned', data.activities?.length || 0, 'activities');
-        setActivities(data.activities || []);
-      } else {
-        console.warn('[useActivityStream] Polling returned status:', res.status);
-      }
-    } catch (error) {
-      console.error('[useActivityStream] ❌ Polling error:', error);
-    }
-  }, []);
-
   useEffect(() => {
     if (useWebSocket) {
       console.log('[useActivityStream] Using WebSocket mode');
@@ -124,14 +108,11 @@ export function useActivityStream(wsPort = 3102) {
         }
       };
     } else {
-      // Fall back to polling if WebSocket is disabled
-      console.log('[useActivityStream] Using polling mode (every 5 seconds)');
-      pollActivities(); // Poll immediately
-      const interval = setInterval(pollActivities, 5000); // Poll every 5 seconds in fallback mode
-      pollIntervalRef.current = interval;
-      return () => clearInterval(interval);
+      // In polling mode, the hook just notifies that polling should be used
+      // The consuming component (dashboard) will handle polling via its own fetchData()
+      console.log('[useActivityStream] Polling mode enabled - consuming component should handle polling');
     }
-  }, [useWebSocket, connectWebSocket, pollActivities]);
+  }, [useWebSocket, connectWebSocket]);
 
   return {
     isConnected,
