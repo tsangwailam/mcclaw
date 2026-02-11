@@ -5,6 +5,7 @@ import { getApiPrisma } from '../lib/db.js';
 import { toCamelCase } from '../lib/utils.js';
 import { createWebSocketServer, broadcastActivity } from '../lib/websocket.js';
 import { handleGetAgentAnalytics, handleGetAllAgentsAnalytics } from './routes/analytics.js';
+import { handleSearch, handleSearchAutocomplete } from './routes/search.js';
 
 const PORT = process.env.PORT || 3001;
 
@@ -337,6 +338,14 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname.startsWith('/api/analytics/agents/') && req.method === 'GET') {
     const agentName = url.pathname.replace('/api/analytics/agents/', '');
     return handleGetAgentAnalytics(req, res, url, agentName);
+  }
+
+  if (url.pathname === '/api/search' && req.method === 'GET') {
+    return handleSearch(req, res, url);
+  }
+
+  if (url.pathname === '/api/search/autocomplete' && req.method === 'GET') {
+    return handleSearchAutocomplete(req, res, url);
   }
 
   res.writeHead(404);

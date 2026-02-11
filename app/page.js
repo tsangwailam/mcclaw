@@ -299,6 +299,29 @@ export default function Dashboard() {
             {useWebSocket ? 'Live updates' : 'Auto-refreshes 10s'}
           </span>
           <a
+            href="/search"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              fontSize: '13px',
+              fontWeight: '600',
+              borderRadius: '6px',
+              border: '1px solid #8b5cf6',
+              background: 'transparent',
+              color: '#8b5cf6',
+              cursor: 'pointer',
+              textDecoration: 'none',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => { e.style.background = '#8b5cf6'; e.style.color = '#fff'; }}
+            onMouseLeave={e => { e.style.background = 'transparent'; e.style.color = '#8b5cf6'; }}
+            title="Search activities"
+          >
+            🔍 Search
+          </a>
+          <a
             href="/agents"
             style={{
               display: 'inline-flex',

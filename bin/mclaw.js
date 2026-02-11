@@ -8,6 +8,7 @@ import { dashboardCommand } from '../src/commands/dashboard.js';
 import { daemonCommand } from '../src/commands/daemon.js';
 import { configCommand } from '../src/commands/config.js';
 import { exportCommand } from '../src/commands/export.js';
+import { searchCommand } from '../src/commands/search.js';
 
 program
   .name('mclaw')
@@ -92,6 +93,20 @@ program
   .option('-l, --limit <n>', 'Maximum number of records', parseInt, '10000')
   .option('--db-url <url>', 'Database URL (postgresql:// or file:)')
   .action(exportCommand);
+
+// mclaw search "keyword" --agent X --project Y --status Z --after DATE --before DATE --fuzzy
+program
+  .command('search <keyword>')
+  .description('Search activities with full-text search and filters')
+  .option('-a, --agent <agent>', 'Filter by agent')
+  .option('-p, --project <project>', 'Filter by project')
+  .option('-s, --status <status>', 'Filter by status')
+  .option('--after <date>', 'Activities after this date')
+  .option('--before <date>', 'Activities before this date')
+  .option('-f, --fuzzy', 'Use fuzzy matching')
+  .option('-l, --limit <n>', 'Maximum number of results', parseInt, '50')
+  .option('--db-url <url>', 'Database URL (postgresql:// or file:)')
+  .action(searchCommand);
 
 // mclaw migrate - run migrations
 program
