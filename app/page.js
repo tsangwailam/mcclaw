@@ -298,6 +298,29 @@ export default function Dashboard() {
           <span style={{ color: '#8b949e', fontSize: '12px' }}>
             {useWebSocket ? 'Live updates' : 'Auto-refreshes 10s'}
           </span>
+          <a
+            href="/agents"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              fontSize: '13px',
+              fontWeight: '600',
+              borderRadius: '6px',
+              border: '1px solid #58a6ff',
+              background: 'transparent',
+              color: '#58a6ff',
+              cursor: 'pointer',
+              textDecoration: 'none',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => { e.style.background = '#58a6ff'; e.style.color = '#fff'; }}
+            onMouseLeave={e => { e.style.background = 'transparent'; e.style.color = '#58a6ff'; }}
+            title="View agent analytics"
+          >
+            📊 Analytics
+          </a>
           <button
             onClick={() => { setLoading(true); fetchData().finally(() => setLoading(false)); }}
             style={{

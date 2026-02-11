@@ -4,6 +4,7 @@ import XLSX from 'xlsx';
 import { getApiPrisma } from '../lib/db.js';
 import { toCamelCase } from '../lib/utils.js';
 import { createWebSocketServer, broadcastActivity } from '../lib/websocket.js';
+import { handleGetAgentAnalytics, handleGetAllAgentsAnalytics } from './routes/analytics.js';
 
 const PORT = process.env.PORT || 3001;
 
@@ -327,6 +328,15 @@ const server = http.createServer(async (req, res) => {
 
   if (url.pathname === '/api/export' && req.method === 'GET') {
     return handleExport(req, res, url);
+  }
+
+  if (url.pathname === '/api/analytics/agents' && req.method === 'GET') {
+    return handleGetAllAgentsAnalytics(req, res);
+  }
+
+  if (url.pathname.startsWith('/api/analytics/agents/') && req.method === 'GET') {
+    const agentName = url.pathname.replace('/api/analytics/agents/', '');
+    return handleGetAgentAnalytics(req, res, url, agentName);
   }
 
   res.writeHead(404);
