@@ -5,8 +5,8 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: 'Mission Claw',
-  description: 'Activity Dashboard',
+  title: '🦀 Mission Claw',
+  description: 'Agent Activity Dashboard',
 };
 
 export default function RootLayout({ children }) {

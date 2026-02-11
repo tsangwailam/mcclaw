@@ -164,11 +164,11 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   const quickFilterOptions = [
-    { label: '10m', minutes: 10 },
-    { label: '30m', minutes: 30 },
     { label: '1h', minutes: 60 },
-    { label: '2h', minutes: 120 },
+    { label: '6h', minutes: 360 },
     { label: '24h', minutes: 1440 },
+    { label: '7d', minutes: 10080 },
+    { label: '30d', minutes: 43200 },
   ];
 
   const applyQuickFilter = (minutes, label) => {
@@ -243,11 +243,36 @@ export default function Dashboard() {
     <div style={styles.container}>
       <header style={styles.header}>
         <h1 style={styles.title}>
-          🚀 Mission Claw
+          <span style={{ fontSize: '32px', lineHeight: 1 }}>🦀</span>
+          <span>Mission <span style={{ color: '#f0883e' }}>Claw</span></span>
         </h1>
-        <span style={{ color: '#8b949e', fontSize: '14px' }}>
-          Auto-refreshes every 10s
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ color: '#8b949e', fontSize: '12px' }}>
+            Auto-refreshes 10s
+          </span>
+          <button
+            onClick={() => { setLoading(true); fetchData().finally(() => setLoading(false)); }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              fontSize: '13px',
+              fontWeight: '600',
+              borderRadius: '6px',
+              border: '1px solid #f0883e',
+              background: 'transparent',
+              color: '#f0883e',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => { e.target.style.background = '#f0883e'; e.target.style.color = '#fff'; }}
+            onMouseLeave={e => { e.target.style.background = 'transparent'; e.target.style.color = '#f0883e'; }}
+            title="Refresh activity list"
+          >
+            ↻ Refresh
+          </button>
+        </div>
       </header>
 
       <div style={styles.filterBar}>
@@ -297,29 +322,7 @@ export default function Dashboard() {
         </div>
 
         <div style={styles.filterGroup}>
-          <label style={styles.label}>From</label>
-          <input 
-            type="datetime-local" 
-            name="start" 
-            value={formatDateForInput(filters.start)} 
-            onChange={handleFilterChange} 
-            style={styles.input}
-          />
-        </div>
-
-        <div style={styles.filterGroup}>
-          <label style={styles.label}>To</label>
-          <input 
-            type="datetime-local" 
-            name="end" 
-            value={formatDateForInput(filters.end)} 
-            onChange={handleFilterChange} 
-            style={styles.input}
-          />
-        </div>
-
-        <div style={styles.filterGroup}>
-          <label style={styles.label}>Quick</label>
+          <label style={styles.label}>Time Range</label>
           <div style={{ display: 'flex', gap: '4px' }}>
             {quickFilterOptions.map(opt => (
               <button
@@ -330,11 +333,11 @@ export default function Dashboard() {
                   fontSize: '12px',
                   fontWeight: '500',
                   borderRadius: '6px',
-                  border: 'none',
+                  border: activeQuickFilter === opt.label ? '1px solid #f0883e' : '1px solid transparent',
                   cursor: 'pointer',
-                  background: activeQuickFilter === opt.label ? '#238636' : '#30363d',
-                  color: activeQuickFilter === opt.label ? '#fff' : '#c9d1d9',
-                  transition: 'background 0.2s',
+                  background: activeQuickFilter === opt.label ? '#f0883e22' : '#30363d',
+                  color: activeQuickFilter === opt.label ? '#f0883e' : '#c9d1d9',
+                  transition: 'all 0.2s',
                 }}
               >
                 {opt.label}
@@ -359,10 +362,11 @@ export default function Dashboard() {
             cursor: 'pointer',
             background: 'transparent',
             border: '1px solid #30363d',
-            color: '#8b949e'
+            color: '#8b949e',
+            fontSize: '12px',
           }}
         >
-          Reset
+          ✕ Reset
         </button>
       </div>
 
