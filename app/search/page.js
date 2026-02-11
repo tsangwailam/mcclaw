@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 const styles = {
@@ -167,7 +167,7 @@ const styles = {
   },
 };
 
-export default function SearchPage() {
+function SearchPageContent() {
   const searchParams = useSearchParams();
   const [keyword, setKeyword] = useState(searchParams.get('q') || '');
   const [results, setResults] = useState([]);
@@ -447,5 +447,13 @@ export default function SearchPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: '24px', textAlign: 'center', color: '#8b949e' }}>Loading search...</div>}>
+      <SearchPageContent />
+    </Suspense>
   );
 }
