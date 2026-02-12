@@ -18,6 +18,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const rootDir = join(__dirname, '..', '..');
 
+function sanitizePort(port) {
+  const parsed = Number(port);
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) {
+    throw new Error(`Invalid port number: ${port}. Must be an integer between 1 and 65535.`);
+  }
+  return parsed;
+}
+
 export async function daemonCommand(action, options) {
   switch (action) {
     case 'start':
@@ -37,11 +45,12 @@ export async function daemonCommand(action, options) {
 }
 
 function findProcessOnPort(port) {
+  const safePort = sanitizePort(port);
   const pids = new Set();
   
   // Method 1: lsof
   try {
-    const output = execSync(`lsof -ti:${port} 2>/dev/null`, { encoding: 'utf-8' }).trim();
+    const output = execSync(`lsof -ti:${safePort} 2>/dev/null`, { encoding: 'utf-8' }).trim();
     if (output) {
       output.split('\n').forEach(p => {
         const pid = parseInt(p);
@@ -52,7 +61,7 @@ function findProcessOnPort(port) {
   
   // Method 2: ss + parse (more reliable on Linux)
   try {
-    const output = execSync(`ss -tlnp 2>/dev/null | grep ":${port}" | grep -oP 'pid=\\K[0-9]+' || true`, { encoding: 'utf-8' }).trim();
+    const output = execSync(`ss -tlnp 2>/dev/null | grep ":${safePort}" | grep -oP 'pid=\\K[0-9]+' || true`, { encoding: 'utf-8' }).trim();
     if (output) {
       output.split('\n').forEach(p => {
         const pid = parseInt(p);
@@ -63,7 +72,7 @@ function findProcessOnPort(port) {
   
   // Method 3: fuser
   try {
-    const output = execSync(`fuser ${port}/tcp 2>/dev/null || true`, { encoding: 'utf-8' }).trim();
+    const output = execSync(`fuser ${safePort}/tcp 2>/dev/null || true`, { encoding: 'utf-8' }).trim();
     if (output) {
       output.split(/\s+/).forEach(p => {
         const pid = parseInt(p);
@@ -76,6 +85,7 @@ function findProcessOnPort(port) {
 }
 
 function findRelatedProcesses(port) {
+  const safePort = sanitizePort(port);
   const pids = new Set();
   
   // Find next-server processes
@@ -91,7 +101,7 @@ function findRelatedProcesses(port) {
   
   // Find npm exec next processes  
   try {
-    const output = execSync(`pgrep -f "npm.*next.*${port}" 2>/dev/null || true`, { encoding: 'utf-8' }).trim();
+    const output = execSync(`pgrep -f "npm.*next.*${safePort}" 2>/dev/null || true`, { encoding: 'utf-8' }).trim();
     if (output) {
       output.split('\n').forEach(p => {
         const pid = parseInt(p);

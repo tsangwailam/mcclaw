@@ -1,4 +1,5 @@
 import { getApiPrisma } from '../../lib/db.js';
+import { isFuzzyMatch } from '../../lib/utils.js';
 
 export async function handleSearch(req, res, url) {
   try {
@@ -131,12 +132,3 @@ export async function handleSearchAutocomplete(req, res, url) {
   }
 }
 
-function isFuzzyMatch(text, query) {
-  let queryIndex = 0;
-  for (let i = 0; i < text.length && queryIndex < query.length; i++) {
-    if (text[i] === query[queryIndex]) {
-      queryIndex++;
-    }
-  }
-  return queryIndex === query.length;
-}

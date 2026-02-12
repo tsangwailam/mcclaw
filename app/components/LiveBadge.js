@@ -1,3 +1,5 @@
+'use client';
+
 export function LiveBadge({ isConnected, useWebSocket }) {
   const statusColor = isConnected ? '#3fb950' : '#d29922';
   const statusText = isConnected ? 'Live' : 'Polling';

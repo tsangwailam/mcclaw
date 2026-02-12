@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { getDaemonInfo, isDaemonHealthy, getApiUrl, getDbProvider } from '../lib/config.js';
 import { createPrismaClient } from '../lib/db.js';
-import { toCamelCase } from '../lib/utils.js';
+import { toPascalCase } from '../lib/utils.js';
 
 function formatNumber(n) {
   return n?.toLocaleString() ?? null;
@@ -30,7 +30,7 @@ export async function logCommand(action, options) {
         action,
         details: options.details || action,
         agent: options.agent || null,
-        project: toCamelCase(options.project) || null,
+        project: toPascalCase(options.project) || null,
         status: options.status || 'completed',
         duration: options.duration || null,
         inputTokens: options.inputTokens || null,
@@ -57,7 +57,7 @@ async function logDirect(action, options) {
     const prisma = await createPrismaClient(options.dbUrl);
     
     const agent = options.agent || null;
-    const project = toCamelCase(options.project) || null;
+    const project = toPascalCase(options.project) || null;
     const status = options.status || 'completed';
 
     // If a log request comes in for an action/agent/project combination 

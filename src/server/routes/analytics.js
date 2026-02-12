@@ -126,19 +126,32 @@ export async function handleGetAllAgentsAnalytics(req, res) {
 
     const agents = agentData.filter(a => a.agent).map(a => a.agent);
 
-    // Calculate metrics for each agent
-    const analyticsPromises = agents.map(async (agent) => {
-      const activities = await prisma.activity.findMany({
-        where: { agent },
-      });
+    // Fetch all activities in a single query instead of one per agent
+    const allActivities = await prisma.activity.findMany({
+      where: { agent: { in: agents } },
+    });
+
+    // Group activities by agent in JavaScript
+    const activitiesByAgent = {};
+    for (const activity of allActivities) {
+      if (!activitiesByAgent[activity.agent]) {
+        activitiesByAgent[activity.agent] = [];
+      }
+      activitiesByAgent[activity.agent].push(activity);
+    }
+
+    // Calculate metrics for each agent from grouped data
+    const agentAnalytics = agents.map((agent) => {
+      const activities = activitiesByAgent[agent] || [];
 
       const completed = activities.filter(a => a.status === 'completed').length;
       const failed = activities.filter(a => a.status === 'failed').length;
       const total = activities.length;
 
       const successRate = total > 0 ? (completed / total) * 100 : 0;
-      const avgTotalTokens = activities.filter(a => a.totalTokens).length > 0
-        ? activities.reduce((sum, a) => sum + (a.totalTokens || 0), 0) / activities.filter(a => a.totalTokens).length
+      const activitiesWithTokens = activities.filter(a => a.totalTokens);
+      const avgTotalTokens = activitiesWithTokens.length > 0
+        ? activitiesWithTokens.reduce((sum, a) => sum + (a.totalTokens || 0), 0) / activitiesWithTokens.length
         : 0;
 
       return {
@@ -149,8 +162,6 @@ export async function handleGetAllAgentsAnalytics(req, res) {
         avgTokensPerTask: Math.round(avgTotalTokens),
       };
     });
-
-    const agentAnalytics = await Promise.all(analyticsPromises);
 
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
     res.end(JSON.stringify({

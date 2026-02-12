@@ -1,7 +1,9 @@
 import { getPrisma } from '../src/lib/db.js';
+import { homedir } from 'os';
+import { join } from 'path';
 
-const PG_URL = 'postgresql://postgres:123456@localhost:5432/mission_control';
-const SQLITE_URL = 'file:/home/tsangwailam/.mc/data/mission-control.db';
+const PG_URL = process.env.PG_DATABASE_URL || 'postgresql://localhost:5432/mission_control';
+const SQLITE_URL = process.env.SQLITE_DATABASE_URL || `file:${join(homedir(), '.mc', 'data', 'mission-control.db')}`;
 
 async function migrate() {
   console.log('--- Mission Claw Migration ---');

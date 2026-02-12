@@ -12,9 +12,9 @@ export async function configCommand(action, key, options) {
     default:
       console.error(chalk.red(`Unknown config action: ${action}`));
       console.log('Usage: mclaw config <set|get|show>');
-      console.log('  mc config set --db-url "postgresql://..."');
-      console.log('  mc config get db-url');
-      console.log('  mc config show');
+      console.log('  mclaw config set --db-url "postgresql://..."');
+      console.log('  mclaw config get db-url');
+      console.log('  mclaw config show');
       process.exit(1);
   }
 }

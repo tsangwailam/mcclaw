@@ -1,10 +1,7 @@
 import chalk from 'chalk';
 import { getDaemonInfo, isDaemonHealthy, getApiUrl, getDbProvider, getDbUrl, getDashboardInfo, isProcessRunning } from '../lib/config.js';
 import { createPrismaClient } from '../lib/db.js';
-
-function getActivityTime(act) {
-  return act.createdAt || act.timestamp;
-}
+import { getActivityTime } from '../lib/utils.js';
 
 function redactDbUrl(url) {
   if (!url) return 'N/A';

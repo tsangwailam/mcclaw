@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
 import { program } from 'commander';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import { logCommand } from '../src/commands/log.js';
 import { listCommand } from '../src/commands/list.js';
 import { statusCommand } from '../src/commands/status.js';
@@ -10,10 +13,14 @@ import { configCommand } from '../src/commands/config.js';
 import { exportCommand } from '../src/commands/export.js';
 import { searchCommand } from '../src/commands/search.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'));
+
 program
   .name('mclaw')
-  .description('Mission Claw - Activity logging CLI with daemon-based architecture')
-  .version('1.0.0');
+  .description(`Mission Claw v${pkg.version} - Activity logging CLI with daemon-based architecture`)
+  .version(pkg.version);
 
 // mclaw daemon start|stop|status
 program
@@ -90,7 +97,7 @@ program
   .option('--start-date <date>', 'Start date (YYYY-MM-DD or ISO format)')
   .option('--end-date <date>', 'End date (YYYY-MM-DD or ISO format)')
   .option('-o, --output <file>', 'Output filename')
-  .option('-l, --limit <n>', 'Maximum number of records', parseInt, '10000')
+  .option('-l, --limit <n>', 'Maximum number of records', parseInt, 10000)
   .option('--db-url <url>', 'Database URL (postgresql:// or file:)')
   .action(exportCommand);
 
@@ -104,7 +111,7 @@ program
   .option('--after <date>', 'Activities after this date')
   .option('--before <date>', 'Activities before this date')
   .option('-f, --fuzzy', 'Use fuzzy matching')
-  .option('-l, --limit <n>', 'Maximum number of results', parseInt, '50')
+  .option('-l, --limit <n>', 'Maximum number of results', parseInt, 50)
   .option('--db-url <url>', 'Database URL (postgresql:// or file:)')
   .action(searchCommand);
 
@@ -115,13 +122,9 @@ program
   .option('--db-url <url>', 'Database URL (postgresql:// or file:)')
   .action(async (options) => {
     const { execSync } = await import('child_process');
-    const { fileURLToPath } = await import('url');
-    const { dirname, join } = await import('path');
     const { getDbUrl, getDbProvider } = await import('../src/lib/config.js');
     const chalk = (await import('chalk')).default;
-    
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = dirname(__filename);
+
     const rootDir = join(__dirname, '..');
     
     const url = options.dbUrl || getDbUrl();

@@ -213,7 +213,6 @@ export default function Dashboard() {
 
     // In polling mode, fetch updates every 5 seconds
     if (!useWebSocket) {
-      console.log('[Dashboard] Polling mode active - fetching every 5 seconds');
       const interval = setInterval(fetchData, 5000);
       return () => clearInterval(interval);
     }
@@ -222,57 +221,39 @@ export default function Dashboard() {
   // Merge WebSocket activities with the current activities list
   // Only in WebSocket mode - polling mode is handled by fetchData()
   useEffect(() => {
-    console.log('[Dashboard] useEffect merge triggered: wsActivities.length=' + wsActivities.length + ', useWebSocket=' + useWebSocket + ', isConnected=' + isConnected);
     if (wsActivities.length > 0 && useWebSocket && isConnected) {
-      // Get the latest activity from WebSocket stream
       const latestWsActivity = wsActivities[0];
-      console.log('[Dashboard] 🔔 Merging WebSocket activity:', latestWsActivity.id, latestWsActivity.action, 'created:', latestWsActivity.createdAt);
-      console.log('[Dashboard] Filter range:', filters.start, 'to', filters.end);
 
       setActivities((prevActivities) => {
-        // Check if activity already exists
         const existingIndex = prevActivities.findIndex(a => a.id === latestWsActivity.id);
-        console.log('[Dashboard] Activity already in list?', existingIndex >= 0, '(index=' + existingIndex + ')');
 
         if (existingIndex >= 0) {
-          // Update existing activity in place
-          console.log('[Dashboard] 🔄 Updating existing activity');
           const updated = [...prevActivities];
           updated[existingIndex] = latestWsActivity;
           return updated;
         } else {
-
-          // Update filters if not using custom range
+          // Compute effective time range without mutating filters state
+          let effectiveStart = filters.start;
+          let effectiveEnd = filters.end;
           if (activeQuickFilter !== 'custom') {
             const quickFilterOption = quickFilterOptions.find(opt => opt.label === activeQuickFilter);
-            console.log('[Dashboard] Updating filters to quick filter:', activeQuickFilter, quickFilterOption)
-            console.log('[Dashboard] Minutes:', quickFilterOption.minutes);
-            filters.start = new Date(new Date().getTime() - quickFilterOption.minutes * 60 * 1000).toISOString();
-            filters.end = new Date(new Date().getTime() + 1000).toISOString();
+            if (quickFilterOption) {
+              effectiveStart = new Date(new Date().getTime() - quickFilterOption.minutes * 60 * 1000).toISOString();
+              effectiveEnd = new Date(new Date().getTime() + 1000).toISOString();
+            }
           }
 
-          // New activity - check if it passes current filters
           const activityDate = new Date(latestWsActivity.createdAt);
-          const filterStart = new Date(filters.start);
-          const filterEnd = new Date(filters.end);
+          const filterStart = new Date(effectiveStart);
+          const filterEnd = new Date(effectiveEnd);
           const inTimeRange = (activityDate >= filterStart) && (activityDate <= filterEnd);
           const matchesAgent = filters.agent === 'all' || latestWsActivity.agent === filters.agent;
           const matchesProject = filters.project === 'all' || latestWsActivity.project === filters.project;
           const matchesStatus = filters.status === 'all' || latestWsActivity.status === filters.status;
 
-          console.log('[Dashboard] Time range:', activityDate >= filterStart, '&&', activityDate <= filterEnd);
-          console.log('[Dashboard] Filter checks: timeRange=' + inTimeRange + ', agent=' + matchesAgent + ', project=' + matchesProject + ', status=' + matchesStatus);
-          console.log('[Dashboard]   Activity: agent="' + latestWsActivity.agent + '", project="' + latestWsActivity.project + '", status="' + latestWsActivity.status + '"');
-          console.log('[Dashboard]   Filters: agent="' + filters.agent + '", project="' + filters.project + '", status="' + filters.status + '"');
-
           if (inTimeRange && matchesAgent && matchesProject && matchesStatus) {
-            // Activity matches filters - add to beginning of list
-            console.log('[Dashboard] ✅ Adding new activity (matches filters) - new list length: ' + (prevActivities.length + 1));
             return [latestWsActivity, ...prevActivities];
           } else {
-            // Activity doesn't match current filters - don't add it yet
-            // Wait for fetchData() to update the list from database
-            console.log('[Dashboard] ℹ️  Activity does not match filters - waiting for fetchData()');
             return prevActivities;
           }
         }
@@ -290,24 +271,16 @@ export default function Dashboard() {
       if (filters.end) params.append('end', filters.end);
 
       const queryString = params.toString();
-      console.log('[Dashboard] 📡 Fetching activities with filters:', queryString || '(none)');
       const res = await fetch(`/api/activity?${queryString}`);
-      if (!res.ok) {
-        console.error('[Dashboard] ❌ Fetch returned status:', res.status);
-        return;
-      }
+      if (!res.ok) return;
       const data = await res.json();
-      console.log('[Dashboard] 📥 Fetched', data.activities?.length || 0, 'activities');
-      if (data.activities && data.activities.length > 0) {
-        console.log('[Dashboard]   Latest activity:', data.activities[0].id, data.activities[0].action);
-      }
       setActivities(data.activities || []);
       setStats(data.stats || { total: 0, today: 0, week: 0 });
       if (data.filters) {
         setFilterOptions(data.filters);
       }
     } catch (err) {
-      console.error('[Dashboard] ❌ Failed to fetch:', err);
+      // fetch failed silently
     } finally {
       setLoading(false);
     }
@@ -351,7 +324,7 @@ export default function Dashboard() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <LiveBadge isConnected={isConnected} useWebSocket={useWebSocket} />
           <span style={{ color: '#8b949e', fontSize: '12px' }}>
-            {useWebSocket ? 'Live updates' : 'Auto-refreshes 10s'}
+            {useWebSocket ? 'Live updates' : 'Auto-refreshes 5s'}
           </span>
           <a
             href="/search"

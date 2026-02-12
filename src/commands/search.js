@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import { getDaemonInfo, isDaemonHealthy, getApiUrl, getDbProvider } from '../lib/config.js';
 import { createPrismaClient } from '../lib/db.js';
+import { isFuzzyMatch } from '../lib/utils.js';
 
 export async function searchCommand(keyword, options) {
   // If --db-url provided, use direct database access
@@ -168,12 +169,3 @@ function getStatusColor(status) {
   }
 }
 
-function isFuzzyMatch(text, query) {
-  let queryIndex = 0;
-  for (let i = 0; i < text.length && queryIndex < query.length; i++) {
-    if (text[i] === query[queryIndex]) {
-      queryIndex++;
-    }
-  }
-  return queryIndex === query.length;
-}

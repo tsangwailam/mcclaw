@@ -2,13 +2,10 @@ import chalk from 'chalk';
 import Table from 'cli-table3';
 import { getDaemonInfo, isDaemonHealthy, getApiUrl, getDbProvider } from '../lib/config.js';
 import { createPrismaClient } from '../lib/db.js';
+import { getActivityTime } from '../lib/utils.js';
 
 function formatNumber(n) {
   return n?.toLocaleString() ?? '—';
-}
-
-function getActivityTime(act) {
-  return act.createdAt || act.timestamp;
 }
 
 export async function listCommand(options) {

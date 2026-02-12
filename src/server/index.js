@@ -2,7 +2,7 @@ import http from 'http';
 import { stringify } from 'csv-stringify/sync';
 import XLSX from 'xlsx';
 import { getApiPrisma } from '../lib/db.js';
-import { toCamelCase } from '../lib/utils.js';
+import { toPascalCase } from '../lib/utils.js';
 import { createWebSocketServer, broadcastActivity } from '../lib/websocket.js';
 import { handleGetAgentAnalytics, handleGetAllAgentsAnalytics } from './routes/analytics.js';
 import { handleSearch, handleSearchAutocomplete } from './routes/search.js';
@@ -221,9 +221,21 @@ async function handleExport(req, res, url) {
 }
 
 async function handlePostActivity(req, res) {
+  const MAX_BODY_SIZE = 1048576; // 1MB
   let body = '';
-  req.on('data', chunk => { body += chunk.toString(); });
+  let bodySize = 0;
+  req.on('data', chunk => {
+    bodySize += chunk.length;
+    if (bodySize > MAX_BODY_SIZE) {
+      req.destroy();
+      res.writeHead(413, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ error: 'Request body too large. Maximum size is 1MB.' }));
+      return;
+    }
+    body += chunk.toString();
+  });
   req.on('end', async () => {
+    if (bodySize > MAX_BODY_SIZE) return;
     try {
       const data = JSON.parse(body);
       
@@ -244,7 +256,7 @@ async function handlePostActivity(req, res) {
       
       const action = data.action.trim();
       const agent = data.agent || null;
-      const project = toCamelCase(data.project) || null;
+      const project = toPascalCase(data.project) || null;
       const status = data.status;
 
       if (status && status !== 'in_progress') {
@@ -364,3 +376,25 @@ wsServer.listen(WS_PORT, () => {
   console.log(`Mission Claw WebSocket server running on port ${WS_PORT}`);
   createWebSocketServer(wsServer, WS_PORT);
 });
+
+// Graceful shutdown
+async function gracefulShutdown(signal) {
+  console.log(`\nReceived ${signal}. Shutting down gracefully...`);
+  server.close(() => {
+    console.log('HTTP server closed.');
+  });
+  wsServer.close(() => {
+    console.log('WebSocket server closed.');
+  });
+  try {
+    const prisma = await getApiPrisma();
+    await prisma.$disconnect();
+    console.log('Prisma disconnected.');
+  } catch (err) {
+    console.error('Error disconnecting Prisma:', err.message);
+  }
+  process.exit(0);
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));

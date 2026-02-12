@@ -5,7 +5,7 @@ import { stringify } from 'csv-stringify/sync';
 import XLSX from 'xlsx';
 import { getDaemonInfo, isDaemonHealthy, getApiUrl, getDbProvider } from '../lib/config.js';
 import { createPrismaClient } from '../lib/db.js';
-import { toCamelCase } from '../lib/utils.js';
+import { toPascalCase } from '../lib/utils.js';
 
 export async function exportCommand(format, options) {
   // Default to CSV if no format specified
@@ -78,7 +78,7 @@ async function exportDirect(format, options) {
     
     const where = {};
     if (options.agent && options.agent !== 'all') where.agent = options.agent;
-    if (options.project && options.project !== 'all') where.project = toCamelCase(options.project);
+    if (options.project && options.project !== 'all') where.project = toPascalCase(options.project);
     if (options.status && options.status !== 'all') where.status = options.status;
     
     if (options.startDate || options.endDate) {
